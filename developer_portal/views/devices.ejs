@@ -1,0 +1,26 @@
+<table class="table table-hover", style="table-layout:fixed">
+   <thead>
+        <tr>
+          <th>#</th>
+          <% if (typeof(devtypelist[0]) != 'undefined') { %>
+                <% for (var index in devtypelist[0]) { %>
+                    <th><%= index %></th>
+                <% } %>
+          <% } %>  
+        </tr>
+   </thead>
+<tbody>
+<% if (typeof(devtypelist) != 'undefined') { %>
+
+    <% for (var ind in devtypelist) { %>
+            <tr>
+                <td><%= ind %></td>    
+                <% for (var i in devtypelist[ind]) { %>        
+                    <td style="word-break:break-all"> <%= devtypelist[ind][i] %> </td>
+                <% } %>
+            </tr>
+    <% } %>
+<% } %>
+</tbody>
+
+</table>

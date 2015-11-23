@@ -1,0 +1,23 @@
+<% include header.ejs %>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span2">
+            <!--Sidebar content-->
+            <ul class="nav nav-tabs nav-stacked">
+                <li><a href="/api/account/settings/profile">personal profile</a></li>
+                <li><a href="/api/account/settings/devices">devices</a></li>
+                <li><a href="#">application</a></li>
+                <li><a href="#">data analysis</a></li>
+            </ul>
+        </div>
+        <div class="span10">
+            <!--Body content-->
+            <% if (typeof(appkey) != 'undefined' && typeof(appsecret) != 'undefined')  { %>
+            <% include profile.ejs %>
+            <% } %>
+            <% if (typeof(devtypelist) != 'undefined') { %>
+                <% include devices.ejs %>
+            <% } %>
+        </div>
+    </div>
+</div>
