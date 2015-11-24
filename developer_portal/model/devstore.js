@@ -73,9 +73,9 @@ exports.updateDev = function(reqKey, reqField, reqValue, devices_cb) {
 
 exports.remDev = function(reqDevSetKey, reqDevInfoKey, reqDevMetaKey, reqType, devices_cb) {
     var multi = redisCli.multi();
-    multi.srem(reqDevSetKey, reqType, redis.print);
-    multi.del(reqDevInfoKey, redis.print);
-    multi.del(reqDevMetaKey, redis.print);
+    multi.srem(reqDevSetKey, reqType, redisCli.print);
+    multi.del(reqDevInfoKey, redisCli.print);
+    multi.del(reqDevMetaKey, redisCli.print);
     multi.exec(function(err, ret) {
         console.log(ret);    
         devices_cb(err, ret);
