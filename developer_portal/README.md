@@ -6,11 +6,28 @@ Setup
 
 1.dependencies:
 
-redis 3.0 and need install express4.13.3, node_redis, async, express-session, jquery.
+redis 3.0 (mine configure file redis_6397.conf like below)
+    
+    bind 127.0.0.1
+    port 6379
+    loglevel debug
+    logfile iot-redis.log
+    
+    appendonly yes
+    appendfilename appendonly.aof
+    # appendfsync always
+    appendfsync everysec
+    # appendfsync no
+    no-appendfsync-on-rewrite yes
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+
+    
+and need install express4.13.3, node_redis, async, express-session, jquery.
 
 2.cd developer_portal directory, then install its node_modules with 'npm install'.
 
-3.you can run with 'DEBUG=developer_portal npm start'
+3.you can run with 'DEBUG=developer_portal npm start'(also start redis-server like './redis-server ./redis_6397.conf &')
 
 
 
