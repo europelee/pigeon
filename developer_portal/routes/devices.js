@@ -2,7 +2,7 @@
 
 var express = require('express');
 var router = express.Router();
-var devstore = require('../model/devstore');
+var devstore = require('../../nodejs_lib/model/devstore');
 var async = require('async');
 var account = require('../model/account');
 var consts  = require('../consts');

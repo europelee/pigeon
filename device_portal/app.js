@@ -1,26 +1,13 @@
-"use strict";
-
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
-var session = require('express-session');
 var cookieParser = require('cookie-parser');
-var settings = require("./settings");
 var bodyParser = require('body-parser');
-var flash = require('connect-flash');
 
-var redisCli = require('../nodejs_lib/lib/redisCli');
 var routes = require('./routes/index');
 var users = require('./routes/users');
-var reg   = require('./routes/reg');
-var login = require('./routes/login');
-var personSettings = require('./routes/settings');
-
-var sessionStore = require('connect-redis')(session);
-
-var devices = require('./routes/devices.js');
-var consts = require('./consts');
+var gateway = require('./routes/gateway');
 
 var app = express();
 
@@ -32,32 +19,13 @@ app.set('view engine', 'ejs');
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser(settings.sesssecret));
-app.use(flash());
-app.use(session({secret:settings.sesssecret, resave:true,
-    saveUninitialized:true, store:new sessionStore({host:settings.host, port:settings.port, db:settings.db, prefix:settings.ssprefix})}));
-    //saveUninitialized:true, store:new sessionStore({client:redisCli})}));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(function(req,res,next){
-    console.log("app.usr local");
-    res.locals.user = req.session.user;
-    res.locals.post = req.session.post;
-    var error = req.flash('error');
-    res.locals.error = error.length?error:null;
-    var success = req.flash('success');
-    res.locals.success = success.length?success:null;
-    next();
-});
-
 app.use('/', routes);
-app.use(consts.ACCOUNT_PATH, reg);
-app.use(consts.ACCOUNT_PATH, login);
-app.use(consts.ACCOUNT_PATH, personSettings);
 app.use('/users', users);
-app.use('/v0.1/iot/devices', devices);
-
+app.use('/v0.1/iot/devices/gateway', gateway);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');

@@ -128,3 +128,22 @@ exports.updateDevMeta = function(reqKey, reqMeta, devices_cb) {
 exports.delDevMeta = function(reqKey, devices_cb) {
     delKey(reqKey, devices_cb);
 }
+
+
+exports.checkGWAuth = function(redis_dbconf, key, devices_cb) {
+    //not support now
+    devices_cb(null, 1);
+}
+
+exports.saveGWDevId = function(redis_dbconf, gwKey, gwId, macKey, macValue, devices_cb) {
+    var mSet = new Array();
+    mSet.push(macKey, macValue);
+
+    var multi = redisCli.multi();
+    multi.sadd(gwKey, gwId, redisCli.print);
+    multi.hmset(gwKey+':'+gwId, mSet, redisCli.print);
+    multi.exec(function(err, ret) {
+        console.log(ret);    
+        devices_cb(err, ret);
+    });
+}

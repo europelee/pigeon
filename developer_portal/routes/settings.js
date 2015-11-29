@@ -7,7 +7,7 @@ var account = require('../model/account');
 var User    = require('../model/user');
 var logstat = require('../base/logstat');
 var async = require('async');
-var devstore = require('../model/devstore');
+var devstore = require('../../nodejs_lib/model/devstore');
 
 //invoked by any requests passed to the reg router
 router.use(function devLog(req, res, next) {

@@ -1,8 +1,8 @@
 "use strict";
 
 var crypto = require('crypto');
-var util   = require('../lib/util');
-var redisCli = require('../lib/redisCli');
+var util   = require('../../nodejs_lib/lib/util');
+var redisCli = require('../../nodejs_lib/lib/redisCli');
 
 exports.getAccount = function(reqKey, reqAccount, account_cb) {
     
