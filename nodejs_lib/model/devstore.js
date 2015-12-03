@@ -2,6 +2,7 @@
 
 var redisCli = require('../lib/redisCli');
 var async = require('async');
+var redis = require('redis');
 
 function checkHashSet(reqKey, devices_cb) {
     
@@ -74,9 +75,9 @@ exports.updateDev = function(reqKey, reqField, reqValue, devices_cb) {
 
 exports.remDev = function(reqDevSetKey, reqDevInfoKey, reqDevMetaKey, reqType, devices_cb) {
     var multi = redisCli.multi();
-    multi.srem(reqDevSetKey, reqType, redisCli.print);
-    multi.del(reqDevInfoKey, redisCli.print);
-    multi.del(reqDevMetaKey, redisCli.print);
+    multi.srem(reqDevSetKey, reqType, redis.print);
+    multi.del(reqDevInfoKey, redis.print);
+    multi.del(reqDevMetaKey, redis.print);
     multi.exec(function(err, ret) {
         console.log(ret);    
         devices_cb(err, ret);
@@ -141,8 +142,8 @@ exports.saveGWDevId = function(redis_dbconf, gwKey, gwId, macKey, macValue, devi
     mSet.push(macKey, macValue);
 
     var multi = redisCli.multi();
-    multi.sadd(gwKey, gwId, redisCli.print);
-    multi.hmset(gwKey+':'+gwId, mSet, redisCli.print);
+    multi.sadd(gwKey, gwId, redis.print);
+    multi.hmset(gwKey+':'+gwId, mSet, redis.print);
     multi.exec(function(err, ret) {
         console.log(ret);    
         devices_cb(err, ret);
@@ -190,8 +191,8 @@ exports.BindGateWay = function(redis_dbconf, accKey, gwBindPostKey, userName, gw
     mIdSet.push(gwId);
     console.log('gwid:'+gwId+' typeof:'+typeof(gwId));    
     var multi = redisCli.multi();
-    multi.sadd(accKey+':'+userName+':'+gwBindPostKey, mIdSet, redisCli.print);
-    multi.hmset(gwSetKey+':'+gwId, mSet, redisCli.print);
+    multi.sadd(accKey+':'+userName+':'+gwBindPostKey, mIdSet, redis.print);
+    multi.hmset(gwSetKey+':'+gwId, mSet, redis.print);
     multi.exec(function(err, ret) {
         console.log(ret);    
         devices_cb(err, ret);
