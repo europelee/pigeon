@@ -1,0 +1,50 @@
+<div class="row">
+<div class="panel panel-info col-md-5 col-md-offset-3">
+  <div class="panel-heading" style="width:100%;">
+    <h3 class="panel-title">gateway</h3>
+  </div>
+  <div class="panel-body">
+  
+<form class="form" method="post" action="/v0.1/iot/devices/gateway/bind">
+	<fieldset>
+		<legend>bind your gateway</legend>
+		<div class="form-group">
+			<label for="gatewayID" class="control-label">gateway ID</label>
+      		<input type="text" class="form-control" id="gwid" name="gwid" placeholder="gateway ID">
+		</div>
+		<div class="form-group" >
+		<div class="col-sm-offset-1 col-sm-10">
+			<button type="submit" class="btn btn-primary">bind</button>
+		  </div>
+		</div>
+	</fieldset>
+</form>
+ </div>
+</div>  
+</div>
+<% if (typeof(gwlist) != 'undefined' && gwlist != null) { %>
+
+    <% for (var ind=0; ind<gwlist.length; ind=ind+2) { %>
+<div class="row">
+     
+        <div class="panel panel-info col-md-5">
+        <div class="panel-heading">
+        <h3 class="panel-title">gateway</h3>
+        </div>
+        <div class="panel-body">
+           <%= gwlist[ind]['ID'] %>
+        </div>
+        </div>
+       <% if (ind+1 < gwlist.length) { %>  
+       <div class="panel panel-info col-md-5 col-md-offset-2">
+                    <div class="panel-heading">
+                    <h3 class="panel-title">gateway</h3>
+                    </div>
+                    <div class="panel-body">
+                    <%= gwlist[ind+1]['ID'] %>
+                    </div>
+            </div>
+        <% } %>  
+</div>    
+    <% } %>
+<% } %>

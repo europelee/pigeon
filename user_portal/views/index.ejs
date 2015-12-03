@@ -1,0 +1,14 @@
+<% include header.ejs %>
+<div class="jumbotron">
+<h1>welecome user portal</h1>
+<p style='word-wrap:break-word;text-align:justify;'>User portal is an  IOT cloud service, one of components of pigeon which is an open source Internet of Things Platform.</p>
+<p>You can register and bind your gateway(devices) to pigeon, then control your devices and view data from your devices.</p>
+<% if(!user) { %>
+<p>
+<a class="btn btn-primary btn-large" href="/user/account/login">login</a>
+<a class="btn btn-large" href="/user/account/reg">sign up</a>
+</p>
+<% } %>
+</div>
+
+<% include footer.ejs %>

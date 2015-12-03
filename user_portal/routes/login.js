@@ -10,11 +10,11 @@ var User    = require('../../nodejs_lib/model/user');
 var logstat = require('../base/logstat');
 var settings = require('../settings');
 
-function gen_session(user, res) {
+function gen_cookie(user, res) {
     var auth_token = user + '$$$$'; 
     var opts = {
         path: '/',
-        maxAge: 1000 * 60 * 60 * 24 * 30,
+        maxAge: 1000 * 60,
         signed: true,
         httpOnly: true
         };
@@ -27,15 +27,15 @@ router.use(function devLog(req, res, next) {
     next();
 });
 
-router.get('/login', logstat.offLine);
-router.get('/login',function(req,res){
+router.get('/', logstat.offLine);
+router.get('/',function(req,res){
             res.render('login',{
-                            title:"account login"
+                            title:consts.UP_TITLE
                         });
 });
 
-router.post('/login', logstat.offLine);
-router.post('/login', function(req, res) {
+router.post('/', logstat.offLine);
+router.post('/', function(req, res) {
     console.log('account login');
     var md5 = crypto.createHash('md5');
     var password = md5.update(req.body.password).digest('base64');
@@ -57,22 +57,13 @@ router.post('/login', function(req, res) {
                     }
                     req.session.user = new User({name:req.body.account, passwd:password});
                     req.flash('success', 'login success');
-                    
-                    //cookie, it not need because of app use session?
-                    //gen_session(req.body.account, res);
+                    //cookie, it not need because of app.use session?
+                    //gen_cookie(req.body.account, res);
                     res.redirect('/');
 
                 });
     });
 });
 
-router.get('/logout', logstat.onLine);
-router.get('/logout', function(req, res) {
-    req.flash('success', 'logout succ');
-    req.session.destroy();
-    //req.session.user = null;
-    res.clearCookie(settings.authcookiename, { path: '/' });
-    res.redirect('/');
-});
 
 module.exports = router;

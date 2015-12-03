@@ -1,12 +1,14 @@
 <% include header.ejs %>
-<div class="hero-unit">
+<div class="jumbotron">
 <h1>welecome developer portal</h1>
 <p style='word-wrap:break-word;text-align:justify;'>developer portal is an  IOT cloud service for developers, one of components of pigeon which is an open source Internet of Things Platform.</p>
 <p>And it provides REST APIs for creating and managing device type.</p>
-<% if(!user) {%>
+<% if(!user) { %>
 <p>
 <a class="btn btn-primary btn-large" href="/api/account/login">login</a>
 <a class="btn btn-large" href="/api/account/reg">sign up</a>
 </p>
 <% } %>
 </div>
+
+<% include footer.ejs %>

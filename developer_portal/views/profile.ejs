@@ -1,6 +1,7 @@
+<!--
 <div class="boxed-group">
 <h3>Personal profile</h3>
-<div class="form">
+<div class="form-group">
   <fieldset>
     <label>App Key</label>
     <input readonly="readonly" id="appkeyid" type="text" name="appkey" value="<% if (typeof(appkey) != 'undefined') { %>
@@ -16,3 +17,19 @@
   </fieldset>
 </div>
 </div>
+-->
+<form class="form-horizontal">
+  <div class="form-group">
+    <label for="appkeyid" class="col-sm-2 control-label">App Key</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" readonly="readonly" id="appkeyid"  name="appkey" value="<% if (typeof(appkey) != 'undefined') { %> <%= appkey %><% } %>" >
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="appsecretid" class="col-sm-2 control-label">App Secret</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="appsecretid"  readonly="readonly" name="appsecret" value="<% if (typeof(appsecret) != 'undefined') { %> <%= appsecret %><% } %>" >
+    </div>
+  </div>
+  </div>
+</form>

@@ -4,7 +4,7 @@ var express = require('express');
 var router = express.Router();
 var devstore = require('../../nodejs_lib/model/devstore');
 var async = require('async');
-var account = require('../model/account');
+var account = require('../../nodejs_lib/model/account');
 var consts  = require('../consts');
 
 function getUsrName(req, usr_cb) {

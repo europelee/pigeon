@@ -1,6 +1,7 @@
 "use strict";
 
 var redisCli = require('../lib/redisCli');
+var async = require('async');
 
 function checkHashSet(reqKey, devices_cb) {
     
@@ -145,5 +146,87 @@ exports.saveGWDevId = function(redis_dbconf, gwKey, gwId, macKey, macValue, devi
     multi.exec(function(err, ret) {
         console.log(ret);    
         devices_cb(err, ret);
+    });
+}
+
+exports.checkGWId = function(redis_dbconf, gwSetKey, gwId, cb) {
+    redisCli.sismember(gwSetKey, gwId, function(err, ret) {
+        cb(err, ret);       
+    });
+}
+
+exports.checkGWBind = function(redis_dbconf, accKey, gwSetKey, gwId, ownerField, cb) {
+    redisCli.hget(gwSetKey+':'+gwId, ownerField, function(err, ret) {
+        if (err == null && ret != null) {
+            //check user valid
+            redisCli.sismember(accKey, ret, function(err, sret){
+                if (err == null && sret == 1) {
+                    cb(err, true);
+                }
+                else {
+                    if (err == null) {
+                        console.log('it is binded by one who is not exist');
+                    }
+                    cb(err, false);
+                }
+
+
+            });
+        }
+        else {
+            if (err == null) {
+                console.log('it is binded by noone');
+            }
+            cb(err, false);
+        }
+    });
+}
+
+exports.BindGateWay = function(redis_dbconf, accKey, gwBindPostKey, userName, gwSetKey, gwId, ownerField, devices_cb) {
+        
+    var mSet = new Array();
+    mSet.push(ownerField, userName);
+    var mIdSet = new Array();
+    mIdSet.push(gwId);
+    console.log('gwid:'+gwId+' typeof:'+typeof(gwId));    
+    var multi = redisCli.multi();
+    multi.sadd(accKey+':'+userName+':'+gwBindPostKey, mIdSet, redisCli.print);
+    multi.hmset(gwSetKey+':'+gwId, mSet, redisCli.print);
+    multi.exec(function(err, ret) {
+        console.log(ret);    
+        devices_cb(err, ret);
+    });
+}
+
+exports.getGWListBinded = function(redis_dbconf, accKey, gwBindPostKey, userName, gwSetKey, gwIdField, gwInfoKeyList, devices_cb) {
+        
+    redisCli.smembers(accKey+':'+userName+':'+gwBindPostKey, function (err, replies) {
+        if (err != null||typeof(replies)=='undefined'||replies == null) {
+            devices_cb(err,null);
+            return;
+        }
+        
+        var gwArray = new Array();
+        async.map(replies, function(item, callback) {
+            redisCli.hmget(gwSetKey+':'+item, gwInfoKeyList, function(err, valueList) {
+                var itemO = null;
+                if (err == null) {
+                    var o = '{'+"\""+gwIdField+"\""+':'+"\""+item+"\""+',';
+                    for (var i in gwInfoKeyList) {
+                        o = o + "\"" + gwInfoKeyList[i] +"\""+ ':'+"\""+valueList[i]+"\"";
+                        if (i < gwInfoKeyList.length - 1) {
+                            o = o + ',';
+                        }
+                    }
+                    o = o + '}';
+                    console.log('o is '+o);
+                    itemO = JSON.parse(o);
+                }
+                callback(err, itemO);
+            });
+        }, function(err,results) {
+            devices_cb(err, results);
+        });        
+        console.log('err '+ err + ', ' + replies.length + " replies:");
     });
 }

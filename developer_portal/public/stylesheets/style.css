@@ -1,8 +1,25 @@
 body {
-  padding: 50px;
+  padding: 0px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 a {
   color: #00B7FF;
 }
+
+.footer{
+    clear: both;
+	background: #f6f6f6;
+	border-top: 1px solid #989da4;
+    padding: 20px 0;
+	color: #999;
+}
+
+.footer-sub {
+ margin-bottom: 0;
+}
+
+.carousel-caption .col-md-8, .carousel-caption .col-md-4 {
+            padding-right: 0px;
+}
+                

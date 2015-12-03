@@ -16,16 +16,16 @@ router.use(function devLog(req, res, next) {
     next();
 });
 
-router.get('/reg', logstat.offLine);
-router.get('/reg',function(req,res){
+router.get('/', logstat.offLine);
+router.get('/',function(req,res){
             res.render('reg',{
-                            title:"account register"
+                            title:consts.UP_TITLE
                         });
 });
 
 //1.create user
-router.post('/reg', logstat.offLine);
-router.post('/reg', function(req, res) {
+router.post('/', logstat.offLine);
+router.post('/', function(req, res) {
     console.log("create account ");
     if(req.body['password-repeat']!=req.body['password']){
         console.log('passwd is wrong!');
@@ -71,20 +71,6 @@ router.post('/reg', function(req, res) {
                     console.log(err);
                     return res.redirect(consts.ACCOUNT_PATH + '/reg');
                 }
-                
-                //genkey, no need sync with the below redirect
-                account.genKeySc(consts.ACC_KEY+':'+req.body.account+consts.ACC_INFO, consts.ACC_APPKEY_FIELD,
-                    consts.ACC_APPSEC_FIELD, req.body.account, password, function(err, ret, appkeyval) {
-                        if (err) {
-                            console.log(err);
-                        }
-
-                        account.saveAKUsrMap(consts.APP_KEY_PRE, appkeyval, req.body.account, function(err, ret){
-                            if (err) {
-                                console.log(err);
-                            }
-                        });
-                    });          
                 
                 var newUser = new User({
                     name : req.body.account,
