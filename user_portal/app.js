@@ -42,6 +42,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(req,res,next){
     console.log("app.usr local");
+    console.log('req.session.id:'+req.session.id+' req.sessionID:'+req.sessionID);
     res.locals.user = req.session.user;
     res.locals.post = req.session.post;
     var error = req.flash('error');

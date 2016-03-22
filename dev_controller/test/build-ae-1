@@ -1,0 +1,1 @@
+ g++ -o test-hiredis-ae-1 test-hiredis-ae-1.cpp ../../cpp_lib/isc/GatewayPropSon.cpp -I../../cpp_lib/third_party/hiredis-lib/inc -I/root/base/rapidjson/include -I../../cpp_lib/isc/ -L../../cpp_lib/third_party/hiredis-lib/lib -lae -ljemalloc -lhiredis -lpthread -std=c++11

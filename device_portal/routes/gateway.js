@@ -53,7 +53,32 @@ router.post('/', function(req, res) {
 });
 
 //2.require device plugin download(TBD)
+router.get('/:gwid/devplug/:devplugid', function(req, res) {
+    console.log("gateway device plugins download!");
+    if (req.params.gwid == null || req.params.devplugid == null) {
+        console.log("either gwid or devplugid is null");
+        res.status = 400;
+        res.send("gwid or devplugid is null");
+        return;
+    }
 
+    if (req.query.version == null) {
+        console.log("not version was set");
+        res.status = 400;
+        res.send("version not set");
+        return;
+    }
+
+    console.log("gwid:"+req.params.gwid+" devplugid:"+req.params.devplugid+" version:"+req.query.version);
+
+    //todo: check if gwid,devplugid,version is valid
+
+    res.download("/root/"+req.params.devplugid+"-"+req.query.version, function(err){
+        if (err) { 
+            console.log("file download fail "+err);
+        }
+    });    
+});
 //3.require gateway agent upgraded(TBD)
 
 module.exports = router;

@@ -41,6 +41,38 @@ router.get('/profile', function(req, res) {
 
 router.get('/devices', logstat.onLine);
 router.get('/devices', function(req, res) {
+    //test
+//    setInterval(function () {
+
+        console.log("check gw prop....:");
+        var gwO = new Object();
+        gwO.gwid = 'j4hJbk3YRHgzi1eimCKuvQ=='; 
+        var subMsg = {action:'getAgentProp', param:gwO};
+        gBackEnd.sendMsg("dev_controller", subMsg, function(err, msg){
+            console.log('test agentprop:'+JSON.stringify(msg));
+        });
+//    },9000);
+    
+    var cmdO = new Object();
+    cmdO.gwid = 'j4hJbk3YRHgzi1eimCKuvQ==';
+
+    var inst  = new Object();
+    inst.devtype = "light";
+    inst.list = new Array();
+
+    var io = new Object();
+    io.devid = "light_1";
+    var prop = {power:1};
+    io.prop = prop;
+    inst.list.push(io);
+
+    cmdO.devices = new Array();
+    cmdO.devices.push(inst);
+
+    gBackEnd.sendMsg("gwagent", cmdO, function(err, msg) {
+        console.log('test devices cmd:'+JSON.stringify(msg)); 
+    });   
+    
     var name = null;
     if (req.session.user) {
         name = req.session.user.name;

@@ -13,8 +13,15 @@
 
 <link rel='stylesheet' href='/stylesheets/bootstrap.css' />
 <link rel="stylesheet" href="/stylesheets/style.css"/>
+
+                  <script type="text/javascript"> 
+                    function UnloadConfirm() { 
+                        alert('leave now?'); 
+                    } 
+
+                    </script>
 </head>
-<body>
+<body onbeforeunload = "UnloadConfirm()" >
 <nav class="navbar  navbar-inverse" role="navigation">
         <div class="container-fluid">
             <!-- Brand and toggle get grouped for better mobile display -->

@@ -1,0 +1,32 @@
+
+PAHO_C_LIB ?= /usr/local/lib
+PAHO_CPP_PATH ?= /root/base/org.eclipse.paho.mqtt.cpp
+PIGEON_CPPLIB_PATH ?= ../../cpp_lib
+MQTT_MODULE ?= $(PIGEON_CPPLIB_PATH)/mqtt_module
+CXXFLAGS += -Wall -std=c++11
+CPPFLAGS += -I$(MQTT_MODULE) -I$(PAHO_CPP_PATH)/src
+
+ifdef DEBUG
+  CPPFLAGS += -DDEBUG
+  CXXFLAGS += -g -O0
+else
+  CPPFLAGS += -D_NDEBUG
+  CXXFLAGS += -O2
+endif
+
+LDLIBS += -L$(PAHO_CPP_PATH)/lib -L$(PAHO_C_LIB) -lmqttpp -lpaho-mqtt3a
+CXX=g++
+
+SRCS=$(wildcard ./MqttEndTest.cpp) $(wildcard $(MQTT_MODULE)/*.cpp)
+#OBJ=$(addprefix ./, $(addsuffix .o, $(basename $(SRC))))
+OBJS=$(patsubst %.cpp,%.o,$(SRCS))
+TARGET=MqttEndTest
+
+all: $(TARGET)
+	
+$(TARGET): $(SRCS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
+#$(OBJS):$(SRCS)
+#	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -o $@ $(LDLIBS)
+clean:
+	rm -f $(TARGET) $(OBJ)

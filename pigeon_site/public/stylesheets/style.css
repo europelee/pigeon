@@ -1,0 +1,90 @@
+/*body {
+  padding: 0px;
+  font:"Lucida Grande", Helvetica, Arial, sans-serif;
+}
+*/
+a {
+  color: #00B7FF;
+}
+
+.footer{
+    clear: both;
+	background: #f6f6f6;
+	border-top: 1px solid #989da4;
+    padding: 20px 0;
+	color: #999;
+}
+
+.footer-sub {
+ margin-bottom: 0;
+}
+
+.carousel-caption .col-md-8, .carousel-caption .col-md-4 {
+            padding-right: 0px;
+}
+
+.product-container {  
+        width: 260px;  
+        margin: 0 auto;  
+        border-radius: 10px;  
+        background: #f6f8f7;  
+
+        .name {  
+                border-bottom: 1px solid @gray-light;  
+                font-size: 20px;  
+                padding: 2px;  
+        }  
+        .interest {  
+                color: #1da427;  
+                font-size: 70px;  
+                font-weight: bold;  
+                padding: 0px;  
+                margin-bottom: -30px;  
+
+               .percent {  
+                        font-size: 31px;  
+                }  
+        }  
+        .intro {  
+                padding: 5px;  
+        }  
+        .strong {  
+                padding: 3px;  
+                font-size: 17px;  
+                color: @white;  
+                background: #326c84;  
+                border-radius: 0 0 10px 10px;  
+        }  
+}
+
+/* Use mouse hover to open/close a dropdown menu */
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+    display: block;
+}
+
+/* Add the project logo */
+.navbar-brand-logo {
+    padding: 18px 20px;
+    background-image: url(../images/favicon.ico);
+    background-repeat: no-repeat;
+    background-size: 36px 32px;
+    background-position: left center;
+}
+
+/* Align Font Awesome icons in the navbar */
+#header ul.dropdown-menu .fa {
+    display: inline-block;
+    width: 1.25em;
+    text-align: center;
+    margin-left: -0.5em;
+}
+
+/* Justify and hypenate a paragraph by default */
+
+p {
+    text-align: justify;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+}
+
