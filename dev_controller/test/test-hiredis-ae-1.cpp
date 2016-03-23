@@ -23,18 +23,29 @@ static volatile bool stop = false;
 static aeEventLoop *loop;
 static char id[64] = {0};
 void getCallback(redisAsyncContext *c, void *r, void *privdata) {
+    printf("get a new ret:\n");
     redisReply *reply = (redisReply *)r;
     if (reply == NULL) return;
     if (reply->type == REDIS_REPLY_ARRAY) {
         for (int i = 0; i < reply->elements; ++i) {
-            
-            printf("argv[%s]: %s\n", (char*)privdata, reply->element[i]->str);
-            printf("argv[%s]: %lld\n", (char*)privdata, reply->element[i]->integer);
+            if (reply->element[i]->type == REDIS_REPLY_ARRAY) {
+
+                redisReply * tmp = reply->element[i];
+                for (int j = 0; j < tmp->elements; ++j) {
+                    printf("argv[%s]: %s\n", (char*)privdata, tmp->element[j]->str);
+                    printf("argv[%s]: %lld\n", (char*)privdata, tmp->element[j]->integer);
+                }    
+            } 
+            else {
+                printf("argv[%s]: %s\n", (char*)privdata, reply->element[i]->str);
+                printf("argv[%s]: %lld\n", (char*)privdata, reply->element[i]->integer);
+            }
         }
     }
-    printf("argv[%s]: %s\n", (char*)privdata, reply->str);
-    printf("argv[%s]: %lld\n", (char*)privdata, reply->integer);
-
+    else {
+        printf("argv[%s]: %s\n", (char*)privdata, reply->str);
+        printf("argv[%s]: %lld\n", (char*)privdata, reply->integer);
+    }
 }
 
 
@@ -104,12 +115,21 @@ void testThreadLoop(void * p) {
             printf("exit\n");
             return;
         }
-        //redisAsyncCommand((redisAsyncContext *)p, getCallback, c11, "get testint");
-        //redisAsyncCommand((redisAsyncContext *)p, getCallback, c11, "ping");
+        
+        strcpy(c11, "multi");
+        redisAsyncCommand((redisAsyncContext *)p, getCallback, c11, "multi");
+        strcpy(c11, "get testint");
+        redisAsyncCommand((redisAsyncContext *)p, getCallback, c11, "get testint");
+        strcpy(c11, "ping");
+        redisAsyncCommand((redisAsyncContext *)p, getCallback, c11, "ping");
         //redisAsyncCommand((redisAsyncContext *)p, checkGWIDCallback, c11, "sismember  %b %b", "iot:gateway", 11, id, strlen(id));
         char tmp[256] = {0};
         sprintf(tmp, "iot:gateway:%s:prop", id);
-        redisAsyncCommand((redisAsyncContext *)p, getCallback, c11, "hgetall %s", tmp);
+        strcpy(c11, "hgetall");
+        redisAsyncCommand((redisAsyncContext *)p, getCallback, tmp, "hgetall %s", tmp);
+        
+        strcpy(c11, "exec");
+        redisAsyncCommand((redisAsyncContext *)p, getCallback, c11, "exec");
         num = -1;
     }
 }

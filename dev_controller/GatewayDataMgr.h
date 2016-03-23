@@ -6,6 +6,13 @@
  * @date 2016-02-28
  */
 
+/**
+ * todo:
+ * operation on redis need to be reconstructed, 
+ * for atomic, should use multi/exec even through hiredis-aysnc
+ * europelee
+ * 2016-03-22
+ */
 #ifndef _GATEWAY_DATASTORE_H
 #define _GATEWAY_DATASTORE_H
 #include <list>
