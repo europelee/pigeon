@@ -9,7 +9,7 @@
 /**
  * todo:
  * operation on redis need to be reconstructed, 
- * for atomic, should use multi/exec even through hiredis-aysnc
+ * for atomic, should use multi/exec and watch  or redis's lua script even through hiredis-aysnc
  * europelee
  * 2016-03-22
  */
@@ -18,7 +18,8 @@
 #include <list>
 #include <string>
 #include <thread>
-#include<functional>
+#include <map>
+#include <functional>
 #include "QueryInterface.h"
 
 struct aeEventLoop;
@@ -36,23 +37,19 @@ namespace pigeon {
             void getUpRouterInfo(const std::string & optId, QCacheFuncObject * ptFuncObj);
             void getGatewayProp(const std::list<std::string> &gwidList, QFuncObject *ptFuncObj);
             void getGatewayProp(const std::string & gwid, QFuncObject * ptFuncObj);            
-            void saveGatewayProp(const std::string & gwid, const std::string & prop);                        
+            void saveGatewayProp(const std::string & gwid, const std::string & prop, bool bScript=true);
         private:
             class GatewayProp {
                 public:
-                    GatewayProp(const char * gwid, const char * prop) {
-                        ptGwId = gwid;
-                        ptGwProp = prop;
+                    GatewayProp(const char * gwid, const char * prop):mGwId(gwid), mGwProp(prop) {
                     }
 
                     ~GatewayProp() {
-                        ptGwId = NULL;
-                        ptGwProp = NULL;
                     }
 
                 public:
-                    const char * ptGwId;
-                    const char * ptGwProp;
+                    std::string mGwId;
+                    std::string mGwProp;
 
             };
             
@@ -84,7 +81,7 @@ namespace pigeon {
             int mPort;
             redisAsyncContext *mPtRedisAC;
             aeEventLoop *mPtEventLoop;
-
+            std::map<std::string, std::string> mScriptSha1Map;
         private:
             void loopThread();
             static void connectCallback(const redisAsyncContext *c, int status);
@@ -92,6 +89,7 @@ namespace pigeon {
             static void quitConnCallBack(redisAsyncContext *c, void *r, void *privdata); 
             static void checkGWIDCallback(redisAsyncContext *c, void *r, void *privdata);
             static void updateGWPropCallback(redisAsyncContext *c, void *r, void *privdata); 
+            static void updateGWPropCallbackExScript(redisAsyncContext *c, void *r, void *privdata); 
             static void queryGWPropCallback(redisAsyncContext *c, void *r, void *privdata);
             static void multiCallback(redisAsyncContext *c, void *r, void *privdata);
             static void execCallback(redisAsyncContext *c, void *r, void *privdata);
@@ -100,6 +98,14 @@ namespace pigeon {
             static void expireUpRCacheCallback(redisAsyncContext *c, void *r, void *privdata);
             static void delUpRCacheCallback(redisAsyncContext *c, void *r, void *privdata);
         
+        private:
+            static const std::string & saveGatewayProp_script;
+
+        private:
+            static bool readScript(const std::string & scriptFilePath, std::string & scriptStream);
+            void sha1sumScript();
+            bool sha1sumScriptHelper(const std::string & scriptFilePath, std::string & sha1val);
+
         private:
             /** Non-copyable */
             GatewayDataMgr(const GatewayDataMgr&) =delete;

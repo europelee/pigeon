@@ -10,6 +10,8 @@
 #include <thread>
 #include <functional>
 #include <memory>
+#include <fstream>
+#include <sstream> 
 #include <ISCRule.h>
 #include <GatewayPropSon.h>
 #include "GatewayDataMgr.h"
@@ -27,7 +29,9 @@ extern "C"{
 #endif
 
 namespace pigeon {
-    
+
+    const std::string & GatewayDataMgr::saveGatewayProp_script = "lua/saveGatewayProp.lua";
+
     const char * GatewayDataMgr::UpCacheRInfo::cliID_tag = "cliId";
     const char * GatewayDataMgr::UpCacheRInfo::seq_tag = "seq";
     const char * GatewayDataMgr::UpCacheRInfo::gwid_tag = "gwid";
@@ -38,7 +42,7 @@ namespace pigeon {
         }
 
     GatewayDataMgr::~GatewayDataMgr() {
-
+        mScriptSha1Map.clear();
     }
 
 
@@ -73,6 +77,9 @@ namespace pigeon {
 
     int GatewayDataMgr::startRedisCliProcLoop() {
         int iRet = 0;
+        
+        //init redis script sha1
+        sha1sumScript();
 
         mPtRedisAC = redisAsyncConnect(mRedisSvrIPAddr.c_str(), mPort);
         if (mPtRedisAC->err) {
@@ -109,10 +116,10 @@ namespace pigeon {
     }
 
     void GatewayDataMgr::delUpRCacheCallback(redisAsyncContext *c, void *r, void *privdata) {
-         
+
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            
+
             printf("[%s]-delUpRCache: reply null\n", (char *)privdata);
             return;
         }
@@ -121,17 +128,17 @@ namespace pigeon {
     }
 
     void GatewayDataMgr::getUpRInfoCallback(redisAsyncContext *c, void *r, void *privdata) {
-    
+
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
             printf("getUpRouterInfo reply is null\n");
-            
+
             UpCacheRInfo* ptQf = (UpCacheRInfo *)privdata;
             delete ptQf;
             ptQf = NULL;
             return;
         }
-        
+
         std::string cliId;
         int seq;
         std::string gwId;
@@ -141,25 +148,25 @@ namespace pigeon {
                 if (0 == strcmp(UpCacheRInfo::cliID_tag, reply->element[i]->str)) {
                     cliId = reply->element[i+1]->str;
                 }
-                
+
                 if (0 == strcmp(UpCacheRInfo::seq_tag, reply->element[i]->str)) {
                     seq = atoi(reply->element[i+1]->str); 
                 }
-                
+
                 if (0 == strcmp(UpCacheRInfo::gwid_tag, reply->element[i]->str)) {
                     gwId = reply->element[i+1]->str;
                 }
             }
         }
-        
+
         UpCacheRInfo * info = (UpCacheRInfo *)privdata;
 
         QCacheFuncObject * ptQf = info->getQCacheFuncObj();
         (*ptQf)(cliId, seq, gwId);
-        
+
         //del cache
         redisAsyncCommand(c, delUpRCacheCallback, NULL, "del %s", info->getOptId().c_str());
-        
+
         delete info;
         info = NULL;
     }
@@ -167,7 +174,7 @@ namespace pigeon {
     void GatewayDataMgr::queryGWPropCallback(redisAsyncContext *c, void *r, void *privdata) {
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            
+
             QFuncObject * ptQf = (QFuncObject *)privdata;
             delete ptQf;
             ptQf = NULL;
@@ -196,11 +203,69 @@ namespace pigeon {
 
     void GatewayDataMgr::updateGWPropCallback(redisAsyncContext *c, void *r, void *privdata) {
         redisReply *reply = (redisReply *)r;
-        if (reply == NULL) return;
-        printf("[%s]: %s\n", (char*)privdata, reply->str);
+        if (reply == NULL) {
+            printf("[%s] updateGWPropCallback: reply null\n", (char*)privdata);
+            if (NULL != privdata) {
+                free(privdata);
+                privdata = NULL;
+            }
+            return;
+        }
+
+        printf("[%s] updateGWPropCallback: %s\n", (char*)privdata, reply->str);
+
+        if (NULL != privdata) {
+            free(privdata);
+            privdata = NULL;
+        }
 
     }
 
+    void GatewayDataMgr::updateGWPropCallbackExScript(redisAsyncContext *c, void *r, void *privdata) {
+    
+        redisReply *reply = (redisReply *)r;
+        GatewayProp * gp = (GatewayProp *)privdata;
+        
+        if (!gp) {
+            printf("happen exception updateGWPropCallbackExScript privdata is null\n");
+            return;
+        }
+
+        if (reply == NULL) {
+            
+            printf("[%s] updateGWPropCallback: reply null\n", gp->mGwId.c_str());
+            delete gp;
+            gp = NULL;
+            return;
+        }
+
+        printf("[%s] updateGWPropCallback: %s\n", gp->mGwId.c_str(), reply->str);
+        if (reply->type == REDIS_REPLY_ERROR) {
+            if (NULL != strstr(reply->str, "NOSCRIPT No matching script")) {
+                //USE EVAL
+                printf("redis-server not cache, we need eval\n");
+                std::string scriptStream = "";
+                bool ret = readScript(saveGatewayProp_script, scriptStream);
+
+                if (!ret) {
+                    delete gp;
+                    gp = NULL;
+                    return;
+                }
+
+                char gwPropKey[128];
+                snprintf(gwPropKey, 127, "%s:%s:%s", ISCRule::iot_gw_dbtag.c_str(), gp->mGwId.c_str(), \
+                        ISCRule::iot_gwprop_dbtag.c_str());
+                gwPropKey[127] = 0;
+                redisAsyncCommand(c, updateGWPropCallbackExScript, gp, "eval %s %d %s %s %s %s", \
+                        scriptStream.c_str(), 2, ISCRule::iot_gw_dbtag.c_str(), gwPropKey, gp->mGwId.c_str(), gp->mGwProp.c_str());
+                return;
+            }
+        }
+        delete gp;
+        gp = NULL;
+    }
+    
     void GatewayDataMgr::checkGWIDCallback(redisAsyncContext *c, void *r, void *privdata) {
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
@@ -215,8 +280,8 @@ namespace pigeon {
 
             std::unique_ptr<GatewayPropSon> ptUqPropSon(new GatewayPropSon());
             char tmp[128];
-            sprintf(tmp, "%s:%s:%s", ISCRule::iot_gw_dbtag.c_str(), ptProp->ptGwId, ISCRule::iot_gwprop_dbtag.c_str());
-            ptUqPropSon->parsePropJson(ptProp->ptGwProp);
+            sprintf(tmp, "%s:%s:%s", ISCRule::iot_gw_dbtag.c_str(), ptProp->mGwId.c_str(), ISCRule::iot_gwprop_dbtag.c_str());
+            ptUqPropSon->parsePropJson(ptProp->mGwProp.c_str());
 
             redisAsyncCommand(c, updateGWPropCallback, NULL, "hmset %s %s %d", tmp, ptUqPropSon->getOnLineTag
                     (), ptUqPropSon->getOnLine());
@@ -236,10 +301,10 @@ namespace pigeon {
     }
 
     void GatewayDataMgr::cacheUpRInfoCallback(redisAsyncContext *c, void *r, void *privdata) {
-    
+
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            
+
             printf("[%s]-cacheUpRouterInfo: reply null\n", (char *)privdata);
             return;
         }
@@ -249,7 +314,7 @@ namespace pigeon {
     }
 
     void GatewayDataMgr::expireUpRCacheCallback(redisAsyncContext *c, void *r, void *privdata) {
-    
+
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
             printf("[%s]: reply null\n", "expireUpRCacheCallback");
@@ -271,19 +336,90 @@ namespace pigeon {
         redisAsyncCommand(mPtRedisAC, queryGWPropCallback, ptFuncObj, "hgetall %s", tmp);
     }
 
-    void GatewayDataMgr::saveGatewayProp(const std::string & gwid, const std::string &prop) {
+    void GatewayDataMgr::saveGatewayProp(const std::string & gwid, const std::string &prop, bool bScript) {
+        
         GatewayProp *PtProp = new GatewayProp(gwid.c_str(), prop.c_str()); 
+        
+        if (true == bScript) {
+            std::map<std::string,std::string>::iterator it;
+            it = mScriptSha1Map.find(saveGatewayProp_script);
+            if (it == mScriptSha1Map.end()) {
+                printf("not find %s sha1val\n", saveGatewayProp_script.c_str());
+                delete PtProp;
+                PtProp = NULL;
+                return;
+            }
+            
+            printf("sha1: [%s]\n", it->second.c_str());
+
+            char gwPropKey[128];
+            snprintf(gwPropKey, 127, "%s:%s:%s", ISCRule::iot_gw_dbtag.c_str(), PtProp->mGwId.c_str(), \
+                    ISCRule::iot_gwprop_dbtag.c_str());
+            redisAsyncCommand(mPtRedisAC, updateGWPropCallbackExScript, PtProp, "evalsha %s %d %s %s %s %s", \
+                    it->second.c_str(), 2, ISCRule::iot_gw_dbtag.c_str(), gwPropKey, PtProp->mGwId.c_str(), PtProp->mGwProp.c_str());
+            return;
+        }
+        
         redisAsyncCommand(mPtRedisAC, checkGWIDCallback, PtProp, "sismember  %s %s", ISCRule::iot_gw_dbtag.c_str(), gwid.c_str());
     }
 
 
     void GatewayDataMgr::cacheUpRouterInfo(const std::string & optId, const std::string & cliId, int uSeq, const std::string & gwId) {
-    
+
         redisAsyncCommand(mPtRedisAC, cacheUpRInfoCallback, (void *)optId.c_str(), "hmset %s %s %s %s %d %s %s", optId.c_str(), UpCacheRInfo::cliID_tag, cliId.c_str(), UpCacheRInfo::seq_tag, uSeq, UpCacheRInfo::gwid_tag, gwId.c_str());
     }
 
     void GatewayDataMgr::getUpRouterInfo(const std::string & optId, QCacheFuncObject * ptFuncObj) {
         UpCacheRInfo * info = new UpCacheRInfo(optId, ptFuncObj); 
         redisAsyncCommand(mPtRedisAC, getUpRInfoCallback, info, "hgetall %s", optId.c_str());
+    }
+
+
+    bool GatewayDataMgr::readScript(const std::string & scriptFilePath, std::string & scriptStream) {
+
+        std::ifstream iscript(scriptFilePath);
+
+        if (false == iscript.is_open()) {
+            return false;
+        }
+
+        std::stringstream buffer;
+        buffer << iscript.rdbuf();
+        scriptStream = buffer.str();
+        std::cout<<scriptStream<<std::endl;
+        iscript.close();
+        iscript.clear();
+        return true;
+    }
+
+    void GatewayDataMgr::sha1sumScript() {
+        std::string sha1val = "";
+        bool ret = false;
+        ret = sha1sumScriptHelper(saveGatewayProp_script, sha1val);
+        
+        if (true == ret) {
+            mScriptSha1Map.insert(std::make_pair<std::string, std::string>(std::string(saveGatewayProp_script), std::string(sha1val)));
+        }
+    }
+    
+    bool GatewayDataMgr::sha1sumScriptHelper(const std::string & scriptFilePath, std::string & sha1val) {
+    
+        char buf[256];
+        sprintf(buf, "sha1sum %s|cut -d\" \" -f1", scriptFilePath.c_str());
+        FILE *pp;
+        if( (pp = popen(buf, "r")) == NULL )
+        {
+            printf("popen() error for %s!/n", buf);
+            return false;
+        }
+        while(fgets(buf, sizeof(buf), pp))
+        {
+            if ( strlen(buf) > 1 && buf[strlen(buf)-1] == '\n') {
+                buf[strlen(buf)-1] = 0;
+            }
+            sha1val = buf;
+        }
+        pclose(pp);
+        return true;
     }
 }
