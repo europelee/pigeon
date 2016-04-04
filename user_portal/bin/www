@@ -41,7 +41,7 @@ else if (cluster.isWorker) {
         server.on('error', onError);
         server.on('listening', onListening);
         
-        gBackEnd = new UPBackEnd(process.pid, 'dealer', 'tcp://10.172.237.98:12346');
+        gBackEnd = new UPBackEnd(process.pid, 'dealer', '10.172.237.98:2182,10.172.237.98:2183,10.172.237.98:2184', '/pigeon/devctlsvc');
         gBackEnd.start(); 
 }
 /**

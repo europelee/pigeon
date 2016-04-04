@@ -9,27 +9,35 @@
 var zmq = require('zmq');
 var Command = require('./base/command');
 var os = require('os');
-
+var SvcDis = require('./DevCtlSvcDiscover');
 var LOG_TAG = 'UPBackEnd';
 var MAX_QUEUE_SIZE = 1024*1024;
 
-function UPBackEnd(upId, commType, commAddr) {
+function UPBackEnd(upId, commType, zkAddrList, nodePath) {
     console.log('UPBackEnd upId:'+upId+' start ... ...');
     this.upId = upId;
     this.commandQueue = new Map();
     this.socket = zmq.socket(commType);
     this.socket.identity = os.hostname()+'-'+upId;
-    this.commAddr = commAddr;
+    this.commAddr = null;
     this.seq = 0;
+    this.svcDis = new SvcDis(zkAddrList, nodePath);
 }
 
 module.exports = UPBackEnd;
 
-
 UPBackEnd.prototype.start = function start() {
+   var self = this;
+   self.svcDis.start(function(info) {
+       var svcInfo = JSON.parse(info);
+       self.commAddr = svcInfo.addr;
+       self.startHelper();
+   }); 
+}
+
+UPBackEnd.prototype.startHelper = function startHelper(commAddr) {
     
     var self = this;
-
     self.socket.on('connect', function(fd, ep) {console.log('connect, endpoint:', ep);});
     self.socket.on('connect_delay', function(fd, ep) {console.log('connect_delay, endpoint:', ep);});
     self.socket.on('connect_retry', function(fd, ep) {console.log('connect_retry, endpoint:', ep);});

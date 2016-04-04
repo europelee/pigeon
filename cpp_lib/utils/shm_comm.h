@@ -26,28 +26,13 @@
 
 #define LOG_TAG   "SHM_COMM"
 
-#define LOG_DEBUG "DEBUG"
-#define LOG_INFO  "INFO"
-#define LOG_WARN  "WARN"
-#define LOG_ERROR "ERROR"
+#define SHM_LOG_DEBUG "DEBUG"
+#define SHM_LOG_INFO  "INFO"
+#define SHM_LOG_WARN  "WARN"
+#define SHM_LOG_ERROR "ERROR"
 #define LOG_FATAL "FATAL"
 #define LOG_FILTER 4 
-/**
-static int I_LEVEL( const char * level) {
-    if (0 == strcmp(level, LOG_DEBUG))
-        return 1;
-    if (0 == strcmp(level, LOG_INFO))
-        return 2;
-    if (0 == strcmp(level, LOG_WARN))
-        return 3;
-    if (0 == strcmp(level, LOG_ERROR))
-        return 4;
-    if (0 == strcmp(level, LOG_FATAL))
-        return 5;
-    
-    return 0;
-}
-*/
+
 #ifdef __linux__
 
 #define SHM_COMM_LOG(level,format,...) \
@@ -62,7 +47,7 @@ static int I_LEVEL( const char * level) {
 
 #define SHM_COMM_LOG(level,...) \
     do { \
-        if (0 == strcmp(level, LOG_ERROR)) \
+        if (0 == strcmp(level, SHM_LOG_ERROR)) \
         { \
             __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__); \
         } \

@@ -7,6 +7,8 @@
  */
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <atomic>
 #include <iostream>
@@ -18,9 +20,12 @@
 #include "rapidjson/stringbuffer.h"
 #include "DevQueryEnd.h"
 #include "DevOptEnd.h"
+#include "DevCtlServiceInfo.h"
+#include "DevCtlServiceReg.h"
 
 static std::atomic_flag g_stopflag = ATOMIC_FLAG_INIT;
 static std::string  dev_ctl_id = "pigeon";
+static std::string  service_path = "/pigeon/devctlsvc/inst-";
 
 std::shared_ptr<pigeon::ZmqEnd> gPtrZmqEndInst = nullptr;
 std::unique_ptr<DevQueryEnd> gPtrDqEnd = nullptr;
@@ -80,8 +85,8 @@ class UsrPortalMsgListener : public pigeon::ZmqMsgListener {
 
 int main(int argc, char ** argv) {
 
-    if (argc < 8) {
-        std::cout<<"dev_controller mqtt_clientid mqtt_username mqtt_password mqtt_connuri, zmq_listenuri redisIPAddr redisPort"<<std::endl;
+    if (argc < 9) {
+        std::cout<<"dev_controller mqtt_clientid mqtt_username mqtt_password mqtt_connuri, zmq_listenuri redisIPAddr redisPort zookeeperAddrList"<<std::endl;
         return -1;
     }
     char hostName[64] = {0};
@@ -106,6 +111,16 @@ int main(int argc, char ** argv) {
     gPtrZmqEndInst->setMsgListener(upListener);
     gPtrZmqEndInst->startMsgLoop();
 
+    //reg own service into zookeeper
+
+    DevCtlServiceInfo sInfo(argv[5]); 
+    DevCtlServiceReg  sGeg(argv[8], service_path, sInfo.getServiceInfoJson());
+    ret = sGeg.RegService();
+    if (ret != 0) {
+        
+        gPtrZmqEndInst->finMsgLoop();
+        return -1;
+    }
     //DevQueryEnd
     gPtrDqEnd = std::unique_ptr<DevQueryEnd>(new DevQueryEnd(gPtrZmqEndInst, argv[6], atoi(argv[7])));
     gPtrDqEnd->start();

@@ -1,5 +1,6 @@
 .gitigonre
 .ycm_extra_conf.*
 *.log
+test*.sh
 node_modules
 tunning/
