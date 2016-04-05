@@ -92,14 +92,14 @@ namespace pigeon {
         return std::string(iot_tag+gw_tag+gwid+gw_prop_tag);
     }
 
-    std::string ISCRule::setUPReqTopic(const std::string & cliID) {
+    std::string ISCRule::setUPReqTopic(const std::string & devCId, const std::string & cliID) {
 
-        return std::string(iot_tag+gw_tag+cliID+up_req_tag);
+        return std::string(iot_tag+gw_tag+devCId+"/"+cliID+up_req_tag);
     }
 
-    std::string ISCRule::setUPRepTopic(const std::string & cliID) {
+    std::string ISCRule::setUPRepTopic(const std::string & devCId, const std::string & cliID) {
 
-        return std::string(iot_tag+gw_tag+cliID+up_rep_tag);
+        return std::string(iot_tag+gw_tag+devCId+"/"+cliID+up_rep_tag);
     }
 
     std::string ISCRule::getUPReqID (const std::string & topic) {
@@ -113,7 +113,12 @@ namespace pigeon {
             return ISCRule::null_id;
 
         std::string cliID = topic.substr(foundBeg+iot_tag.size()+gw_tag.size(), foundEnd-foundBeg-iot_tag.size()-gw_tag.size());
-        return (cliID);
+        
+        std::size_t slashPos = cliID.find("/");
+        if (slashPos == std::string::npos) {
+            return ISCRule::null_id;
+        }
+        return cliID.substr(slashPos+1);
     }
 
     std::string ISCRule::getUPRepID (const std::string & topic) {
@@ -128,7 +133,51 @@ namespace pigeon {
 
         std::string cliID = topic.substr(foundBeg+iot_tag.size()+gw_tag.size(), foundEnd-foundBeg-iot_tag.size()-gw_tag.size());
 
-        return cliID;
+        std::size_t slashPos = cliID.find("/");
+        if (slashPos == std::string::npos) {
+            return ISCRule::null_id;
+        }
+        
+        return cliID.substr(slashPos+1);
+    }
+
+    std::string ISCRule::getUPReqDevCSource (const std::string & topic) {
+    
+        std::size_t foundBeg = topic.find(iot_tag+gw_tag);
+        if (foundBeg == std::string::npos)
+            return ISCRule::null_id;
+
+        std::size_t foundEnd = topic.find(up_req_tag);
+        if (foundEnd == std::string::npos)
+            return ISCRule::null_id;
+
+        std::string cliID = topic.substr(foundBeg+iot_tag.size()+gw_tag.size(), foundEnd-foundBeg-iot_tag.size()-gw_tag.size());
+        
+        std::size_t slashPos = cliID.find("/");
+        if (slashPos == std::string::npos) {
+            return ISCRule::null_id;
+        }
+        return cliID.substr(0, slashPos);
+    }
+
+    std::string ISCRule::getUPRepDevCSource (const std::string & topic) {
+    
+        std::size_t foundBeg = topic.find(iot_tag+gw_tag);
+        if (foundBeg == std::string::npos)
+            return ISCRule::null_id;
+
+        std::size_t foundEnd = topic.find(up_rep_tag);
+        if (foundEnd == std::string::npos)
+            return ISCRule::null_id;
+
+        std::string cliID = topic.substr(foundBeg+iot_tag.size()+gw_tag.size(), foundEnd-foundBeg-iot_tag.size()-gw_tag.size());
+
+        std::size_t slashPos = cliID.find("/");
+        if (slashPos == std::string::npos) {
+            return ISCRule::null_id;
+        }
+        
+        return cliID.substr(0, slashPos);
     }
 
     std::string ISCRule::genDevC2GWMsg(int seq, const std::string & msgContent) {
@@ -191,5 +240,6 @@ namespace pigeon {
         msgContent = sb.GetString();
 
         return true;
-    } 
+    }
+
 }

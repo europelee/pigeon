@@ -20,7 +20,7 @@ class AgentFrontEnd : public MPEndListener {
         AgentFrontEnd(std::shared_ptr<pigeon::MqttMsgListener> li, std::shared_ptr<pigeon::MqttEnd> end, const std::string & gwid):mShrdPtrMqttEnd(end), mLi("subListener"), cb(mShrdPtrMqttEnd, mLi, li){
             mShrdPtrMqttEnd.get()->setCallBack(cb);
             mShrdPtrMqttEnd.get()->startConnect();
-            mShrdPtrMqttEnd.get()->subscribe(pigeon::ISCRule::setUPReqTopic(gwid), mLi);            
+            mShrdPtrMqttEnd.get()->subscribe(pigeon::ISCRule::setUPReqTopic("+", gwid), mLi);            
         }
 
         ~AgentFrontEnd() {

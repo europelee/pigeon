@@ -38,6 +38,8 @@ namespace pigeon {
             void getGatewayProp(const std::list<std::string> &gwidList, QFuncObject *ptFuncObj);
             void getGatewayProp(const std::string & gwid, QFuncObject * ptFuncObj);            
             void saveGatewayProp(const std::string & gwid, const std::string & prop, bool bScript=true);
+            void cacheUpRepSub(const std::string & subKey, const std::string & subTopic, bool bScript=true);
+            void delUpRepSub(const std::string & subKey, const std::string & subTopic, bool bScript=true);
         private:
             class GatewayProp {
                 public:
@@ -53,6 +55,20 @@ namespace pigeon {
 
             };
             
+            class MemMap {
+                public:
+                    MemMap(const std::string & key, const std::string & value):mKey(key), mValue(value) {
+                    }
+
+                    ~MemMap() {
+                    }
+
+                public:
+                    std::string mKey;
+                    std::string mValue;
+
+            };
+
             class UpCacheRInfo {
                 public:
                     static const char * cliID_tag;
@@ -97,10 +113,12 @@ namespace pigeon {
             static void getUpRInfoCallback(redisAsyncContext *c, void *r, void *privdata);
             static void expireUpRCacheCallback(redisAsyncContext *c, void *r, void *privdata);
             static void delUpRCacheCallback(redisAsyncContext *c, void *r, void *privdata);
-        
+            static void cacheUpRepSubCallbackExScript(redisAsyncContext *c, void *r, void *privdata);
+            static void delUpRepSubCallbackExScript(redisAsyncContext *c, void *r, void *privdata); 
         private:
             static const std::string & saveGatewayProp_script;
-
+            static const std::string & cacheUpRepSub_script;
+            static const std::string & delUpRepSub_script;
         private:
             static bool readScript(const std::string & scriptFilePath, std::string & scriptStream);
             void sha1sumScript();

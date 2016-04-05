@@ -16,6 +16,7 @@
 
 const std::string & DevOptEnd::DEVOPTEND_NAME = "gwagent";
 const std::string & DevOptEnd::userportal_dest = "userportal";
+const std::string & DevOptEnd::uprep_sub_tag = "subscribe";
 
 DevOptEnd::DevOptEnd(const std::string & devCtlId, std::shared_ptr<pigeon::ZmqEnd> zmqEnd, const std::string & mqtt_clientid, const std::string & mqtt_username, const std::string &mqtt_password, const std::string &mqtt_connuri, const std::string & redisIp, int port):
     mSharedPtrZmqEnd(zmqEnd), gPtrMqttEndInst(std::make_shared<pigeon::MqttEnd>(mqtt_connuri, mqtt_clientid, mqtt_username, mqtt_password)),
@@ -86,15 +87,20 @@ void DevOptEnd::procOptCmd(const std::string & cliID, int seq, const std::string
     std::string cliMsg = pigeon::ISCRule::genDevC2GWMsg(cSeq, sb.GetString());
 
     /*MqttEnd sub & publish*/
-    
-    gPtrMqttEndInst.get()->subscribe(pigeon::ISCRule::setUPRepTopic(gwIdV.GetString()), *gPtrMqttActLi);
+    std::string repTopic = pigeon::ISCRule::setUPRepTopic(optId, gwIdV.GetString());    
+    gPtrGwDMgr->cacheUpRepSub(mDevCtlId+uprep_sub_tag, repTopic);
+    gPtrMqttEndInst.get()->subscribe(repTopic, *gPtrMqttActLi);
 
-    gPtrMqttEndInst.get()->publish(pigeon::ISCRule::setUPReqTopic(gwIdV.GetString()), cliMsg.c_str(), cliMsg.size());
+    gPtrMqttEndInst.get()->publish(pigeon::ISCRule::setUPReqTopic(optId, gwIdV.GetString()), cliMsg.c_str(), cliMsg.size());
     ++cSeq;
 }
 
 void DevOptEnd::saveGatewayProp(const std::string & gwId, const std::string & rep) {
     gPtrGwDMgr->saveGatewayProp(gwId, rep);
+}
+
+void DevOptEnd::delUpRepSub(const std::string & topic) {
+    gPtrGwDMgr->delUpRepSub(mDevCtlId+uprep_sub_tag, topic);
 }
 
 void DevOptEnd::procGWRepMsg(const std::string & gwId, const std::string & rep) {

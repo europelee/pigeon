@@ -29,9 +29,14 @@ module.exports = UPBackEnd;
 UPBackEnd.prototype.start = function start() {
    var self = this;
    self.svcDis.start(function(info) {
+       try {
        var svcInfo = JSON.parse(info);
        self.commAddr = svcInfo.addr;
        self.startHelper();
+       }
+       catch (e) {
+        console.log(e.stack);
+       }
    }); 
 }
 

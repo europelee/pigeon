@@ -43,10 +43,12 @@ namespace pigeon {
             static bool parseGW2DevCMsg(const std::string & msg, int & seq, std::string & msgContent); 
             static std::string getGWID(const std::string & topic);
             static std::string setGwPropTopic(const std::string & gwid);
-            static std::string setUPReqTopic(const std::string & cliID);
-            static std::string setUPRepTopic(const std::string & cliID);
+            static std::string setUPReqTopic(const std::string & devCId, const std::string & cliID);
+            static std::string setUPRepTopic(const std::string & devCId, const std::string & cliID);
             static std::string getUPReqID (const std::string & topic);
             static std::string getUPRepID (const std::string & topic);
+            static std::string getUPReqDevCSource (const std::string & topic);
+            static std::string getUPRepDevCSource (const std::string & topic);
     };
 }
 #endif

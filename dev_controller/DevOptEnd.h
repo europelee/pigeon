@@ -26,6 +26,7 @@ class DevOptEnd : public QueryInterface{
         void stop();    
     private:
         void saveGatewayProp(const std::string & gwId, const std::string & rep);
+        void delUpRepSub(const std::string & topic); 
         void procGWRepMsg(const std::string & gwId, const std::string & rep);
         virtual void queryCallback(const std::string & cliId, int seq, const std::string & gwid, const std::string & ret) override; 
     public:
@@ -48,6 +49,7 @@ class DevOptEnd : public QueryInterface{
                     else {
                         /*ZmqEnd back rep*/
                         if (NULL != mPtrDevOptEnd) {
+                            mPtrDevOptEnd->delUpRepSub(topic);
                             mPtrDevOptEnd->procGWRepMsg(gwID0, rep); 
                         }
                     }
@@ -92,6 +94,7 @@ class DevOptEnd : public QueryInterface{
         std::string mDevCtlId;
 
         static const std::string & userportal_dest;
+        static const std::string & uprep_sub_tag;
     private:
         /** Non-copyable */
         DevOptEnd(const DevOptEnd&) =delete;

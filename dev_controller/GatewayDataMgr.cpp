@@ -31,6 +31,8 @@ extern "C"{
 namespace pigeon {
 
     const std::string & GatewayDataMgr::saveGatewayProp_script = "lua/saveGatewayProp.lua";
+    const std::string & GatewayDataMgr::cacheUpRepSub_script = "lua/cacheUPRepSub.lua";
+    const std::string & GatewayDataMgr::delUpRepSub_script = "lua/delUPRepSub.lua";
 
     const char * GatewayDataMgr::UpCacheRInfo::cliID_tag = "cliId";
     const char * GatewayDataMgr::UpCacheRInfo::seq_tag = "seq";
@@ -266,6 +268,92 @@ namespace pigeon {
         gp = NULL;
     }
     
+    void GatewayDataMgr::delUpRepSubCallbackExScript(redisAsyncContext *c, void *r, void *privdata) {
+    
+        MemMap * ptMap = (MemMap *)privdata;
+        redisReply *reply = (redisReply *)r;
+        if (reply == NULL) {
+            printf("[%s] delUpRepSubCallbackExScript: reply null\n", ptMap!=NULL?ptMap->mKey.c_str():NULL);
+            if (NULL != ptMap) {
+                delete ptMap;
+                ptMap = NULL;
+            }
+            return;
+        }
+
+        
+        if (!ptMap) {
+            printf("happen exception delUpRepSubCallbackExScript privdata is null\n");
+            return;
+        }
+
+        printf("[%s] delUpRepSubCallbackExScript: %lld\n", ptMap->mKey.c_str(), reply->integer);
+
+        if (reply->type == REDIS_REPLY_ERROR) {
+            if (NULL != strstr(reply->str, "NOSCRIPT No matching script")) {
+                //USE EVAL
+                printf("redis-server not cache, we need eval\n");
+                std::string scriptStream = "";
+                bool ret = readScript(delUpRepSub_script, scriptStream);
+
+                if (!ret) {
+                    delete ptMap;
+                    ptMap = NULL;
+                    return;
+                }
+
+                redisAsyncCommand(c, delUpRepSubCallbackExScript, ptMap, "eval %s %d %s %s", \
+                        scriptStream.c_str(), 1, ptMap->mKey.c_str(), ptMap->mValue.c_str());
+                return;
+            }
+        }
+        delete ptMap;
+        ptMap = NULL;
+    }
+
+    void GatewayDataMgr::cacheUpRepSubCallbackExScript(redisAsyncContext *c, void *r, void *privdata) {
+    
+        MemMap * ptMap = (MemMap *)privdata;
+        redisReply *reply = (redisReply *)r;
+        if (reply == NULL) {
+            printf("[%s] cacheUpRepSubCallbackExScript: reply null\n", (char*)privdata);
+            if (NULL != ptMap) {
+                delete ptMap;
+                ptMap = NULL;
+            }
+            return;
+        }
+
+        
+        if (!ptMap) {
+            printf("happen exception cacheUpRepSubCallbackExScript privdata is null\n");
+            return;
+        }
+
+        printf("[%s] cacheUpRepSubCallbackExScript: %lld\n", ptMap->mKey.c_str(), reply->integer);
+
+        if (reply->type == REDIS_REPLY_ERROR) {
+            if (NULL != strstr(reply->str, "NOSCRIPT No matching script")) {
+                //USE EVAL
+                printf("redis-server not cache, we need eval\n");
+                std::string scriptStream = "";
+                bool ret = readScript(cacheUpRepSub_script, scriptStream);
+
+                if (!ret) {
+                    delete ptMap;
+                    ptMap = NULL;
+                    return;
+                }
+
+                redisAsyncCommand(c, cacheUpRepSubCallbackExScript, ptMap, "eval %s %d %s %s", \
+                        scriptStream.c_str(), 1, ptMap->mKey.c_str(), ptMap->mValue.c_str());
+                return;
+            }
+        }
+        delete ptMap;
+        ptMap = NULL;
+    }
+
     void GatewayDataMgr::checkGWIDCallback(redisAsyncContext *c, void *r, void *privdata) {
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
@@ -400,6 +488,18 @@ namespace pigeon {
         if (true == ret) {
             mScriptSha1Map.insert(std::make_pair<std::string, std::string>(std::string(saveGatewayProp_script), std::string(sha1val)));
         }
+
+        ret = sha1sumScriptHelper(cacheUpRepSub_script, sha1val);
+        
+        if (true == ret) {
+            mScriptSha1Map.insert(std::make_pair<std::string, std::string>(std::string(cacheUpRepSub_script), std::string(sha1val)));
+        }
+
+        ret = sha1sumScriptHelper(delUpRepSub_script, sha1val);
+        
+        if (true == ret) {
+            mScriptSha1Map.insert(std::make_pair<std::string, std::string>(std::string(delUpRepSub_script), std::string(sha1val)));
+        }
     }
     
     bool GatewayDataMgr::sha1sumScriptHelper(const std::string & scriptFilePath, std::string & sha1val) {
@@ -421,5 +521,45 @@ namespace pigeon {
         }
         pclose(pp);
         return true;
+    }
+
+
+    void GatewayDataMgr::cacheUpRepSub(const std::string & subKey, const std::string & subTopic, bool bScript) {
+
+        MemMap * ptMap = new MemMap(subKey, subTopic); 
+        if (bScript) {
+        
+            std::map<std::string,std::string>::iterator it;
+            it = mScriptSha1Map.find(cacheUpRepSub_script);
+            if (it == mScriptSha1Map.end()) {
+                printf("not find %s sha1val\n", cacheUpRepSub_script.c_str());
+                delete ptMap;
+                ptMap = NULL;
+                return;
+            }
+            
+            redisAsyncCommand(mPtRedisAC, cacheUpRepSubCallbackExScript, ptMap, "evalsha %s %d %s %s", \
+                    it->second.c_str(), 1, subKey.c_str(), subTopic.c_str());
+            return;
+        }
+    }
+
+    void GatewayDataMgr::delUpRepSub(const std::string & subKey, const std::string & subTopic, bool bScript) {
+        MemMap * ptMap = new MemMap(subKey, subTopic); 
+        if (bScript) {
+        
+            std::map<std::string,std::string>::iterator it;
+            it = mScriptSha1Map.find(delUpRepSub_script);
+            if (it == mScriptSha1Map.end()) {
+                printf("not find %s sha1val\n", delUpRepSub_script.c_str());
+                delete ptMap;
+                ptMap = NULL;
+                return;
+            }
+            
+            redisAsyncCommand(mPtRedisAC, delUpRepSubCallbackExScript, ptMap, "evalsha %s %d %s %s", \
+                    it->second.c_str(), 1, subKey.c_str(), subTopic.c_str());
+            return;
+        }
     }
 }

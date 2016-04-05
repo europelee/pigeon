@@ -56,6 +56,7 @@ DevCtlSvcDiscovery.prototype.getNodeData = function getNodeData(client, path) {
                 }   
 
                 console.log('Got data: %s', data.toString('utf8'));
+                
                 self.svcCallBack(data.toString('utf8'));
             }   
             );  

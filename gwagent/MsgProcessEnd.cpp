@@ -131,6 +131,13 @@ void MsgProcessEnd::onProc() {
         std::cout<<"not get UPID"<<std::endl;
         return;
     }
+
+    const std::string & devCId = pigeon::ISCRule::getUPReqDevCSource(topic);
+    if (devCId == pigeon::ISCRule::null_id) {
+        std::cout<<devCId<<" "<<pigeon::ISCRule::null_id<<std::endl;
+        std::cout<<"not get devCsource"<<std::endl;
+        return;
+    }
     //todo: parse rep msg then go processing:
     //1. gwagent manager: 
     //(1) reg/devplg-download/self-upgrade;
@@ -140,7 +147,7 @@ void MsgProcessEnd::onProc() {
 
     std::shared_ptr<MPEndListener> tmp = mLi.lock();
     if (tmp) {
-        const std::string & topic = pigeon::ISCRule::setUPRepTopic(gwID);
+        const std::string & topic = pigeon::ISCRule::setUPRepTopic(devCId, gwID);
         tmp->onData(topic, rep);
     }
     else {
