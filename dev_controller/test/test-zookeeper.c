@@ -15,7 +15,70 @@ static void sigIntHandler(int sig) {
    bStop = 1;
 }
 
-int createNode(zhandle_t *zkhandle, const char * path, int flags) {
+
+static void free_String_vector(struct String_vector *v) {
+    if (v->data) {
+        int32_t i;
+        for (i=0; i<v->count; i++) {
+            free(v->data[i]);
+        }
+        free(v->data);
+        v->data = 0;
+    }
+}
+
+
+static char* printNode(struct String_vector *vector) {
+    char *ret = NULL;
+    if (vector->data) {
+        int i = 0;
+        for (i = 0; i < vector->count; i++) {
+            char* child = vector->data[i];
+            printf("print node data %s\n", child);
+        }
+    }
+    return ret;
+}
+
+static void childNodeWatch(zhandle_t *zh, int type, int state, const char *path,void *watcherCtx) {
+
+    printf("childNodeWatch happened: type[%d], path: %s watcherCtx: %s\n", type, path, (char *)watcherCtx);
+
+    char * childPath = watcherCtx;
+    char value[128] = {0};
+    int value_len = sizeof(value);
+    struct Stat item_stat;
+    int ret = zoo_wget(zkhandle, watcherCtx, childNodeWatch, watcherCtx, value, &value_len, &item_stat);
+    if (ret) {
+        printf("zoo_wget %s error\n", childPath);
+    } else {
+        printf("zoo_wget %s:%s\n", childPath, value);
+    }
+    return;
+}
+
+static void watchChildValue(zhandle_t * zkhandle, const char * dirPath, struct String_vector * vector) {
+
+    if (vector->data) {
+        int i = 0;
+        char childPath[128] = {0};
+        for (i = 0; i < vector->count; i++) {
+            char* child = vector->data[i];
+            sprintf(childPath, "%s/%s", dirPath, child);
+            char value[128] = {0};
+            int value_len = sizeof(value);
+            struct Stat item_stat;
+            int ret = zoo_wget(zkhandle, childPath, childNodeWatch, childPath, value, &value_len, &item_stat);
+            if (ret) {
+                printf("zoo_wget %s error\n", childPath);
+            } else {
+                printf("zoo_wget %s:%s\n", childPath, value);
+            }
+        }
+    }
+}
+
+static int createNode(zhandle_t *zkhandle, const char * path, int flags) {
 
     char path_buffer[512];  
     int bufferlen=sizeof(path_buffer); 
@@ -36,7 +99,7 @@ int createNode(zhandle_t *zkhandle, const char * path, int flags) {
     }
 }
 
-int mkdirp(zhandle_t *zkhandle, const char * path, const char * lpath) {
+static int mkdirp(zhandle_t *zkhandle, const char * path, const char * lpath) {
     char * p = strchr(path, '/');
     if (p == NULL) {
         return -1;
@@ -74,9 +137,48 @@ int mkdirp(zhandle_t *zkhandle, const char * path, const char * lpath) {
 
     }
 }
-void zkr_lock_cb(int rc, void* cbdata) {
+static void zkr_lock_cb(int rc, void* cbdata) {
     printf("lock_cb rc=%d process %s\n", rc, cbdata);
 
+}
+
+static void childWatcherCallBack(zhandle_t* zh, int type, int state,
+        const char* path, void* watcherCtx)
+{
+
+    printf("child event happened: type[%d], watcherCtx: %s\n", type, (char *)watcherCtx);
+
+    int ret = 0;
+    struct String_vector strings;
+    struct Stat stat;
+    ret = zoo_wget_children2(zh, path, childWatcherCallBack, watcherCtx, &strings, &stat);
+    if (ret) {
+        fprintf(stderr, "child: zoo_wget_children2 error [%d]\n", ret);
+        return;
+    }
+
+    if (strings.count == 0) return;
+
+    printNode(&strings);
+    watchChildValue(zh, path, &strings);
+    free_String_vector(&strings);
+    return;
+} 
+static int watchChildren(zhandle_t *zh, const char *path, watcher_fn watcher, void *watcherCtx) 
+{
+    int ret = 0;
+    struct String_vector strings;
+    struct Stat stat;
+
+    ret = zoo_wget_children2(zh, path, watcher, watcherCtx, &strings, &stat);
+    if (ret) {
+        fprintf(stderr, "zoo_wget_children2 error [%d]\n", ret);
+    }
+    printf("==========================================\n");
+    printNode(&strings);
+    free_String_vector(&strings);
+    printf("==========================================\n");
+    return ret;
 }
 
 int main(int argc, char ** argv) {
@@ -94,10 +196,14 @@ int main(int argc, char ** argv) {
     
     signal(SIGINT, sigIntHandler);
     signal(SIGTERM, sigIntHandler);
-    
+    char dirPath[128] = {0};
+    strcpy(dirPath, argv[2]);
+    dirPath[127] = 0;
+    char * pEnd = strrchr(dirPath, '/');
+    *pEnd = 0;    
     int timeout = 30000;
     zoo_set_debug_level(ZOO_LOG_LEVEL_DEBUG);
-    zhandle_t* zkhandle = zookeeper_init(argv[1], NULL, timeout, 0, (char *)"Config test", 0);
+    zhandle_t* zkhandle = zookeeper_init(argv[1], NULL/*zktest_watcher_g*/, timeout, 0, dirPath, 0);
     if (zkhandle ==NULL)  
     {  
         fprintf(stderr, "Error when connecting to zookeeper servers...\n");  
@@ -116,15 +222,23 @@ int main(int argc, char ** argv) {
         zkr_lock_lock(&mutex);
     }
     else { 
-        int ret = mkdirp(zkhandle, argv[2], argv[2]);
+    
+        int ret = watchChildren(zkhandle, dirPath, childWatcherCallBack, dirPath);
+        if (ret) {
+            fprintf(stderr, "add_children_watch_on error [%d]\n", ret);
+        }
+        
+        ret = mkdirp(zkhandle, argv[2], argv[2]);
         if (ret != 0) {
             printf("mkdirp fail\n");
             return -1;
         }
+
         ret = zoo_set(zkhandle,seq,argv[3],strlen(argv[3]),-1);
         if(ret != ZOK){
             fprintf(stderr,"failed to set the data of path %s!\n",argv[2]);
         }
+        
     }
     
     while(!bStop) {

@@ -34,6 +34,8 @@ namespace pigeon {
             static const std::string & msg_devices_field;
 
             static const std::string & devctl_svcinfo_addr_tag;
+            static const std::string & devctl_svcinfo_id_tag;
+
         public:
             static std::string genDevC2UMsg(int seq, const std::string & dest, const std::string & msgContent);
             static bool parseU2DevCMsg(const std::string & msg, int & seq, std::string & dest, std::string & msgContent);

@@ -36,6 +36,7 @@ namespace pigeon {
     const std::string & ISCRule::msg_devices_field = "devices";
 
     const std::string & ISCRule::devctl_svcinfo_addr_tag = "addr";
+    const std::string & ISCRule::devctl_svcinfo_id_tag = "id";
 
     std::string ISCRule::genDevC2UMsg(int seq, const std::string & dest, const std::string & msgContent) {
 

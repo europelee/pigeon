@@ -112,8 +112,9 @@ int main(int argc, char ** argv) {
     gPtrZmqEndInst->startMsgLoop();
 
     //reg own service into zookeeper
-
-    DevCtlServiceInfo sInfo(argv[5]); 
+    char svcid[128] = {0};
+    sprintf(svcid, "%s_%d", hostName, procId);
+    DevCtlServiceInfo sInfo(argv[5], svcid); 
     DevCtlServiceReg  sGeg(argv[8], service_path, sInfo.getServiceInfoJson());
     ret = sGeg.RegService();
     if (ret != 0) {

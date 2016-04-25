@@ -19,7 +19,7 @@
 #include "ISCRule.h"
 class DevCtlServiceInfo {
     public:
-        DevCtlServiceInfo(const std::string & svcAddr): mSvcAddr(svcAddr), mInfoJson(""){
+        DevCtlServiceInfo(const std::string & svcAddr, const std::string svcId): mSvcAddr(svcAddr), mSvcId(svcId), mInfoJson(""){
         }
 
         ~DevCtlServiceInfo() {
@@ -27,6 +27,10 @@ class DevCtlServiceInfo {
 
         const std::string & getAddr() const {
             return mSvcAddr;
+        }
+
+        const std::string & getId() const {
+            return mSvcId;
         }
 
         std::string getServiceInfoJson() {
@@ -40,6 +44,8 @@ class DevCtlServiceInfo {
             writer.StartObject();
             writer.Key(pigeon::ISCRule::devctl_svcinfo_addr_tag.c_str());
             writer.String(mSvcAddr.c_str());
+            writer.Key(pigeon::ISCRule::devctl_svcinfo_id_tag.c_str());
+            writer.String(mSvcId.c_str());
             writer.EndObject();
             
             mInfoJson = s.GetString();
@@ -50,6 +56,7 @@ class DevCtlServiceInfo {
 
     private:
         std::string mSvcAddr;
+        std::string mSvcId;
         std::string mInfoJson;
 
     private:

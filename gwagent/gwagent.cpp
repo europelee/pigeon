@@ -17,10 +17,14 @@
 #include "MsgProcessEnd.h"
 #include "AgentFrontEnd.h"
 #include "DataCollectEnd.h"
+#include "DevPluginMng.h"
 
 static std::atomic_flag g_stopflag = ATOMIC_FLAG_INIT;
+static const std::string plugDirPath = "./dev_plugins";
+
 std::shared_ptr<MsgProcessEnd>   MsgProcEnd = nullptr;
 std::shared_ptr<pigeon::MqttEnd> end = nullptr;
+std::shared_ptr<DevPluginMng> plugMng = nullptr;
 
 static void sigIntHandler(int sig) {
     std::cout<<"sig no "<<sig<<std::endl;
@@ -36,7 +40,10 @@ int main (int argc, char ** argv) {
     g_stopflag.test_and_set();    
     signal(SIGINT, sigIntHandler);
     signal(SIGTERM, sigIntHandler);
-    
+   
+    plugMng = std::make_shared<DevPluginMng>();
+    plugMng->load(plugDirPath);
+
     MsgProcEnd = std::make_shared<MsgProcessEnd>(argv[5]);
 
     mqtt::MqttActionListener li("subListener");
@@ -51,6 +58,7 @@ int main (int argc, char ** argv) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
     MsgProcEnd->stop();
+    plugMng->unLoad();
     return 0;
 }
 
