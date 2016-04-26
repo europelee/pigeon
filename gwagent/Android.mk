@@ -35,7 +35,7 @@ endef
 GWAGENTFILES = $(call walk, $(LOCAL_PATH))
 GWAGENT_FILE_LIST := $(filter %.cpp, $(GWAGENTFILES)) 
 
-LOCAL_SRC_FILES := $(filter-out test/testhttp/%.cpp, $(GWAGENT_FILE_LIST:$(LOCAL_PATH)/%=%)) 
+LOCAL_SRC_FILES := $(filter-out test/testhttp/%.cpp test/testplugin/%.cpp, $(GWAGENT_FILE_LIST:$(LOCAL_PATH)/%=%)) 
 
 $(warning  $(LOCAL_SRC_FILES))
 
@@ -67,6 +67,7 @@ $(LOCAL_PATH)/../cpp_lib/third_party/rapidjson/include \
 $(LOCAL_PATH)/../cpp_lib/isc \
 $(LOCAL_PATH)/../cpp_lib/mqtt_module \
 $(LOCAL_PATH)/../cpp_lib/utils \
+$(LOCAL_PATH)/../dev_party \
 $(PAHO_C_PATH)/src \
 $(PAHO_CPP_PATH)/src \
 $(JNI_H_INCLUDE) \
