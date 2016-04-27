@@ -53,6 +53,8 @@ int main (int argc, char ** argv) {
     std::shared_ptr<AgentFrontEnd>  agentFEnd = std::make_shared<AgentFrontEnd>(li2, end, argv[5]);
 
     MsgProcEnd.get()->setMPEndObserver(agentFEnd);
+    MsgProcEnd->setPluginMng(plugMng);
+
     MsgProcEnd->start();
     while(g_stopflag.test_and_set()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));

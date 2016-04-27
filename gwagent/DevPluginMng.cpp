@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string.h>
 #include <utility>
+#include <chrono>
+#include <thread>
 #include "dev_plugin.h"
 #include "DevPluginMng.h"
 
@@ -113,7 +115,18 @@ bool DevPluginMng::unLoad() {
     auto iter = mPlugList.begin();
     for (; iter!=mPlugList.end(); ++iter) {
         DevPluginInfo * pInfo = iter->second;
+        if (NULL == pInfo) {
+            continue;
+        }
+
+        /**
+          while(false == pInfo->lock()) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(20));
+          }
+          pInfo->setEnd(true);
+          */
         dlclose(pInfo->getPlugHandler());
+        //pInfo->unLock();
         delete pInfo;
         pInfo = NULL;
     }
@@ -129,11 +142,26 @@ bool DevPluginMng::unLoad(const std::string & plugKeyName) {
     }
     else {
         DevPluginInfo * pInfo = mPlugList.find(plugKeyName)->second;
-        dlclose(pInfo->getPlugHandler());
-        delete pInfo;
-        pInfo = NULL;
-        mPlugList.erase(plugKeyName);
-        ret = true;
+
+        if (NULL == pInfo) {
+            std::cout<<plugKeyName<<" NULL"<<std::endl;
+            ret = false;
+        }
+        else {
+            //dont need lock because of multi-thread operation no exist although there exists main-thread and procthread
+            /**
+              while(false == pInfo->lock()) {
+              std::this_thread::sleep_for(std::chrono::milliseconds(20));
+              }
+              pInfo->setEnd(true);
+              */
+            dlclose(pInfo->getPlugHandler());
+            //pInfo->unLock();
+            delete pInfo;
+            pInfo = NULL;
+            mPlugList.erase(plugKeyName);
+            ret = true;
+        }
     }
 
     return ret;    
@@ -148,4 +176,9 @@ const DevPluginInfo * DevPluginMng::getPluginByName(const std::string & plugKeyN
     else {
         return NULL;
     }
-} 
+}
+
+
+const std::map<std::string, DevPluginInfo *> & DevPluginMng::getPlugList() const {
+    return mPlugList;
+}

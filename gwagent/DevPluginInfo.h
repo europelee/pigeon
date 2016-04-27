@@ -14,7 +14,7 @@
 
 class DevPluginInfo {
     public:
-        DevPluginInfo(void * ptDll, dev_plugin * ptDevPlug):mPtDll(ptDll), mPtDevPlug(ptDevPlug), mActiveFlag(ATOMIC_FLAG_INIT), mBEnd(false) {
+        DevPluginInfo(void * ptDll, dev_plugin * ptDevPlug):mPtDll(ptDll), mPtDevPlug(ptDevPlug), mActiveFlag(ATOMIC_FLAG_INIT), mBEnd(false), mLabelTime(0) {
 
         }
 
@@ -42,6 +42,14 @@ class DevPluginInfo {
             mBEnd = flag;
         }
 
+        void setLabelTime(std::time_t time) {
+            mLabelTime = time;
+        }
+
+        std::time_t getLabelTime() {
+            return mLabelTime;
+        }
+
         bool lock() {
             if (!mActiveFlag.test_and_set()) {
                 return true;    
@@ -60,7 +68,7 @@ class DevPluginInfo {
         dev_plugin * mPtDevPlug;
         std::atomic_flag mActiveFlag;
         volatile bool mBEnd; 
-
+        std::time_t  mLabelTime;    
     private:
         /** Non-copyable */
         DevPluginInfo() =delete;

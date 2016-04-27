@@ -52,6 +52,7 @@ class DevOptEnd : public QueryInterface{
                             mPtrDevOptEnd->delUpRepSub(topic);
                             mPtrDevOptEnd->procGWRepMsg(gwID0, rep); 
                         }
+                        return;
                     }
 
                     //collecting gateway data
@@ -64,6 +65,21 @@ class DevOptEnd : public QueryInterface{
                         if (NULL != mPtrDevOptEnd) {
                             mPtrDevOptEnd->saveGatewayProp(gwID, rep);
                         }
+
+                        return;
+                    }
+
+                    //collecting devices data
+                    std::string gwid = "";
+                    std::string devid = "";
+                    bool ret = pigeon::ISCRule::getGwDevID(topic, gwid, devid);
+                    if (false == ret) {
+                        std::cout<<"not get GWID, devid"<<std::endl;
+                    }
+                    else {
+                        std::cout<<"GwID:"<<gwid<<" devID:"<<devid<<std::endl;
+                        std::cout<<"devData:"<<rep<<std::endl;
+                        return;
                     }
                 }
 

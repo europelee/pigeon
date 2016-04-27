@@ -17,6 +17,7 @@
 #include "binarysemaphore.h"
 #include "MqttMsgListener.h"
 #include "MPEndListener.h"
+#include "DevPluginMng.h"
 
 #ifdef __cplusplus
     extern "C" {
@@ -39,6 +40,7 @@ class MsgProcessEnd : public pigeon::MqttMsgListener {
         MsgProcessEnd(const std::string & gwid);
         ~MsgProcessEnd();
         void setMPEndObserver(std::shared_ptr<MPEndListener> li);
+        void setPluginMng(std::shared_ptr<DevPluginMng> mng);
         void start();
         void stop();
     public:
@@ -56,6 +58,8 @@ class MsgProcessEnd : public pigeon::MqttMsgListener {
         std::unique_ptr<DataCollectEnd> mUqDCEnd;
         std::time_t  mLabelTime;    
         const int   mTickTimeLong;
+        std::shared_ptr<DevPluginMng> mPlugShPt;
+
     private:
 
         mqttMsgInfo * createMqttMsgInfoObj(const std::string & topic, const std::string & payload);
@@ -63,7 +67,7 @@ class MsgProcessEnd : public pigeon::MqttMsgListener {
         void procThread();
         void onProc();
         void onTick();
-
+        void onCollect();
     private:
         /** Non-copyable */
         MsgProcessEnd(const MsgProcessEnd&) =delete;

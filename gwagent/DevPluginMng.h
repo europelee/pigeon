@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "DevPluginInfo.h"
 class DevPluginMng {
@@ -23,7 +24,7 @@ class DevPluginMng {
         bool unLoad(const std::string & plugKeyName);
         
         const DevPluginInfo * getPluginByName(const std::string & plugKeyName) const;
-
+        const std::map<std::string, DevPluginInfo *> & getPlugList() const;
     private:
         
         template<class Function>

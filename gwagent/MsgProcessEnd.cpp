@@ -12,7 +12,7 @@
 #include "ISCRule.h"
 #include "DataCollectInfo.h"
 
-MsgProcessEnd::MsgProcessEnd(const std::string & gwid): mThreadInter(false), mUqThread(nullptr), mLabelTime(0), mTickTimeLong(25) {
+MsgProcessEnd::MsgProcessEnd(const std::string & gwid): mThreadInter(false), mUqThread(nullptr), mLabelTime(0), mTickTimeLong(25), mPlugShPt(nullptr) {
     std::unique_ptr<DataCollectEnd> tmp(new DataCollectEnd(gwid));
     mUqDCEnd = std::move(tmp);
     int ret = init_memqueue(1024*1024, &mCommCtlInfo, STREAM_IN_DIRECT);
@@ -79,6 +79,8 @@ void MsgProcessEnd::procThread() {
             onTick();
             mLabelTime = nowTime;
         }
+
+        onCollect();
     }
 }    
 
@@ -86,8 +88,12 @@ void MsgProcessEnd::setMPEndObserver(std::shared_ptr<MPEndListener> li) {
     mLi = li;
 }
 
+void MsgProcessEnd::setPluginMng(std::shared_ptr<DevPluginMng> mng) {
+    mPlugShPt = mng;
+}
+
 void MsgProcessEnd::onSuccess(const std::string & topic, const std::string & rep)  {
-    
+
     std::cout<<"onSuccess:"<<topic<<"  "<<rep<<std::endl;
 
 
@@ -102,7 +108,7 @@ void MsgProcessEnd::onSuccess(const std::string & topic, const std::string & rep
     }
     /* signal BackEndThread*/
     mBinSem.post();
-    
+
 }
 
 void MsgProcessEnd::onError(int errCode, const std::string & errInfo) {
@@ -122,7 +128,7 @@ void MsgProcessEnd::onProc() {
 
     std::string topic = ptRepO->mPtrTopic;
     std::string rep = ptRepO->mPtrPayLoad;
-    
+
     releaseMqttMsgInfoObj(&ptRepO);
 
     const std::string & gwID = pigeon::ISCRule::getUPReqID(topic);
@@ -172,4 +178,40 @@ void MsgProcessEnd::onTick() {
     else {
         std::cout<<"mLi is null"<<std::endl;
     }
+}
+
+void MsgProcessEnd::onCollect() {
+    if (nullptr == mPlugShPt) {
+        return;
+    }
+
+    std::time_t nowTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    const std::map<std::string, DevPluginInfo *> & tmpMap = mPlugShPt->getPlugList();
+    for (auto iter = tmpMap.begin(); iter != tmpMap.end(); ++iter) {
+        DevPluginInfo * tmp = iter->second;
+        if (nowTime - tmp->getLabelTime() > tmp->getDevPlugin()->dev_datacollectTick) {
+            //collect
+            std::cout<<iter->first<<" collect data ..."<<std::endl;
+            char * ptrData = NULL;
+            int len = 0;
+            tmp->getDevPlugin()->collect_func(&ptrData,&len);
+            std::cout<<ptrData<<std::endl;
+
+            const std::list<DataCollectInfo *> & list = mUqDCEnd->startDevDataCollection(iter->first, ptrData);
+
+            std::shared_ptr<MPEndListener> tmp0 = mLi.lock();
+            if (tmp0) {
+                std::list<DataCollectInfo *>::const_iterator it;
+                for (it = list.begin(); it != list.end(); ++it) {
+                    const DataCollectInfo * info = *it;
+                    tmp0->onData(info->mTopic, info->mPayLoad);
+                }
+            }
+            else {
+                std::cout<<"mLi is null"<<std::endl;
+            }
+            nowTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            tmp->setLabelTime(nowTime);
+        }      
+    }   
 }

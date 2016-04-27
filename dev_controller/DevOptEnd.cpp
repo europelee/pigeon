@@ -28,7 +28,7 @@ DevOptEnd::DevOptEnd(const std::string & devCtlId, std::shared_ptr<pigeon::ZmqEn
         gPtrMqttEndInst.get()->setCallBack(cb);
         gPtrMqttEndInst.get()->startConnect();
         gPtrMqttEndInst.get()->subscribe("/iot/gateway/+/prop", *gPtrMqttActLi);
-
+        gPtrMqttEndInst->subscribe("/iot/gateway/+/device/+/data", *gPtrMqttActLi);
     }
 
 DevOptEnd::~DevOptEnd() {

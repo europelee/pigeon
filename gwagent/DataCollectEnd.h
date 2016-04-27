@@ -38,7 +38,14 @@ class DataCollectEnd {
             mDCIList.push_back(info);
             return mDCIList;
         }
-    
+   
+        const std::list<DataCollectInfo *> & startDevDataCollection(const std::string & devId, const std::string & devData) {
+            clearDCList();
+            std::string topic = pigeon::ISCRule::setGwDevDataTopic(mGwId, devId);            
+            DataCollectInfo *info = new DataCollectInfo(topic, devData);
+            mDCIList.push_back(info);
+            return mDCIList;
+        } 
     private:
         void clearDCList() {
             std::list<DataCollectInfo *>::const_iterator it;

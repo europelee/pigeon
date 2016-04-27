@@ -17,7 +17,9 @@ namespace pigeon {
             static const std::string & up_req_tag;
             static const std::string & up_rep_tag;
             static const std::string & gw_tag;
+            static const std::string & gw_dev_tag;
             static const std::string & gw_prop_tag;
+            static const std::string & dev_prop_tag;
             static const std::string & null_id;
             
             static const std::string & iot_gw_dbtag;
@@ -45,6 +47,8 @@ namespace pigeon {
             static bool parseGW2DevCMsg(const std::string & msg, int & seq, std::string & msgContent); 
             static std::string getGWID(const std::string & topic);
             static std::string setGwPropTopic(const std::string & gwid);
+            static bool getGwDevID(const std::string & topic, std::string & gwid, std::string & devid);
+            static std::string setGwDevDataTopic(const std::string &gwid, const std::string & devid);
             static std::string setUPReqTopic(const std::string & devCId, const std::string & cliID);
             static std::string setUPRepTopic(const std::string & devCId, const std::string & cliID);
             static std::string getUPReqID (const std::string & topic);
