@@ -19,7 +19,12 @@ extern "C"
 static const char * testPlugName = "testDevPlug";
 static const int testPlugVersion = 1;
 static int dataCollectTick = 10;
-static const char * testCollectData = "collect data";
+static const char * testCollectData0 = "[{\"devid\":\"12adf\", \"devname\":\"testp\", \"prop\":{\"ddddffff\":\"dg\"}}]";
+static const char * testInvalidData = "invalid data";
+static const char * testCollectData1 = "{\"devid\":\"12adf1\", \"devname\":\"testp1\", \"prop\":\"{\\\"value\\\":212}\"}";
+static const char * testCollectData2 = "[{\"devid\":\"12adf1\", \"devname\":\"testp1\", \"prop\":\"{\\\"value\\\":212}\"}]";
+static int iIndex = 0;
+static const char * pIdx = NULL;
 
 static void testplug_proc(const char * inStream, int len, devplugin_proccallback cb) {
     printf("%s %s called\n", testPlugName, __func__);
@@ -30,9 +35,30 @@ static void testplug_collect(char ** outStream, int * len) {
         printf("outStream == NULL || len == NULL\n");
         return;
     }
-    *len = strlen(testCollectData);
+    
+    switch (iIndex) {
+        case 0:
+            pIdx = testCollectData0;
+            break;
+        case 1:
+            pIdx = testInvalidData;
+            break;
+        case 2:
+            pIdx = testCollectData1;
+            break;
+        case 3:
+            pIdx = testCollectData2;
+            break;
+        default:
+            pIdx = testCollectData0;
+            break;
+    }
+
+    *len = strlen(pIdx);
     *outStream = (char *)malloc(*len+1);
-    strcpy(*outStream, testCollectData);
+    strcpy(*outStream, pIdx);
+    int tmp = (++iIndex)%4;
+    iIndex = tmp;
 }
 
 int devplugin_init(INOUT dev_plugin * pt_plugin) {

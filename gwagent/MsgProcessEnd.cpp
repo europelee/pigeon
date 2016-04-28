@@ -22,7 +22,6 @@ MsgProcessEnd::MsgProcessEnd(const std::string & gwid): mThreadInter(false), mUq
 
 MsgProcessEnd::~MsgProcessEnd() {
     std::cout<<"MsgProcessEnd destructor"<<std::endl;
-
     int ret = fini_memqueue(1024*1024, &mCommCtlInfo, STREAM_IN_DIRECT); 
     assert(ret==0);
 }
@@ -51,11 +50,13 @@ void MsgProcessEnd::releaseMqttMsgInfoObj(mqttMsgInfo ** dPtRepO) {
 }
 
 void MsgProcessEnd::start() {
+    mDataValidator.init();
     std::unique_ptr<std::thread> tmp(new std::thread(std::mem_fn(&MsgProcessEnd::procThread), this));
     mUqThread = std::move(tmp);
 }
 
 void MsgProcessEnd::stop() {
+    mDataValidator.fin();
     mThreadInter = true;
     mUqThread->join();
 }
@@ -196,9 +197,16 @@ void MsgProcessEnd::onCollect() {
             int len = 0;
             tmp->getDevPlugin()->collect_func(&ptrData,&len);
             std::cout<<ptrData<<std::endl;
-
+            if (false == mDataValidator.validJsonData(ptrData)) {
+                free(ptrData);
+                ptrData = NULL;
+                nowTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                tmp->setLabelTime(nowTime);
+                continue;
+            }
             const std::list<DataCollectInfo *> & list = mUqDCEnd->startDevDataCollection(iter->first, ptrData);
-
+            free(ptrData);
+            ptrData = NULL;
             std::shared_ptr<MPEndListener> tmp0 = mLi.lock();
             if (tmp0) {
                 std::list<DataCollectInfo *>::const_iterator it;

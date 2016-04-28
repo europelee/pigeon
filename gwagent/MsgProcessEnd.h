@@ -18,6 +18,7 @@
 #include "MqttMsgListener.h"
 #include "MPEndListener.h"
 #include "DevPluginMng.h"
+#include "DataValidator.h"
 
 #ifdef __cplusplus
     extern "C" {
@@ -59,7 +60,7 @@ class MsgProcessEnd : public pigeon::MqttMsgListener {
         std::time_t  mLabelTime;    
         const int   mTickTimeLong;
         std::shared_ptr<DevPluginMng> mPlugShPt;
-
+        DataValidator  mDataValidator;
     private:
 
         mqttMsgInfo * createMqttMsgInfoObj(const std::string & topic, const std::string & payload);
