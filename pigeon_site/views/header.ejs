@@ -3,6 +3,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"/>
+<% include statics.ejs %>
 <title><%= title %> - open source IoT Cloud Platform</title>
 <link rel="shortcut icon" href="/images/favicon.ico">
 <style type="text/css">
@@ -35,14 +36,20 @@ padding-bottom: 40px;
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li class="dropdown">
-                <a href="./news/2015/11/10/4-1-0-Beta8.html">
+                <a href="./news/index.html" target="_blank">
                     News
                 </a>
                 <ul class="dropdown-menu">
                     <li>
-                    <a href="./news/index.html">
+                    <a href="./news/index.html" target="_blank">
                         <i class="fa fa-archive"></i>
-                        Archive
+                        For Developers 
+                    </a>
+                    </li>
+                    <li>
+                    <a href="./news/index.html" target="_blank">
+                        <i class="fa fa-archive"></i>
+                        For Users 
                     </a>
                     </li>
                 </ul>
@@ -55,7 +62,7 @@ padding-bottom: 40px;
                     <li>
                     <a href="https://github.com/europelee/pigeon/archive/master.zip">
                         <i class="fa fa-cloud-download"></i>
-                        master
+                        master-source
                         <small>&dash; latest</small>
                     </a>
                     </li>
