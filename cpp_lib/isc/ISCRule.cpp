@@ -40,6 +40,17 @@ namespace pigeon {
     const std::string & ISCRule::devctl_svcinfo_addr_tag = "addr";
     const std::string & ISCRule::devctl_svcinfo_id_tag = "id";
 
+
+    const std::string & ISCRule::iot_gwid_dbtag = "gwid";
+    const std::string & ISCRule::iot_devtype_dbtag = "devtype";
+    const std::string & ISCRule::iot_devinstlist_dbtag = "instlist";            
+    const std::string & ISCRule::iot_devid_dbtag = "devid";
+    const std::string & ISCRule::iot_devname_dbtag = "devname";
+    const std::string & ISCRule::iot_devprop_dbtag = "prop";
+
+    const std::string & ISCRule::iot_devdata_db_id = "iot:devdata";
+    const std::string & ISCRule::iot_devcollection_id = "dev_collection";
+
     std::string ISCRule::genDevC2UMsg(int seq, const std::string & dest, const std::string & msgContent) {
 
         rapidjson::StringBuffer s;

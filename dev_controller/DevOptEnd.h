@@ -17,15 +17,18 @@
 #include "ISCRule.h"
 #include "GatewayDataMgr.h"
 #include "QueryInterface.h"
+#include "DevDataMgr.h"
+
 class DevOptEnd : public QueryInterface{
     public:
-        DevOptEnd(const std::string & devCtlId, std::shared_ptr<pigeon::ZmqEnd> zmqEnd, const std::string & mqtt_clientid, const std::string & mqtt_username, const std::string &mqtt_password, const std::string &mqtt_connuri, const std::string & redisIp, int port);
+        DevOptEnd(const std::string & devCtlId, std::shared_ptr<pigeon::ZmqEnd> zmqEnd, const std::string & mqtt_clientid, const std::string & mqtt_username, const std::string &mqtt_password, const std::string &mqtt_connuri, const std::string & redisIp, int port, const std::string & mongodbUri);
         ~DevOptEnd();
         void procOptCmd(const std::string & cliID, int seq, const std::string & OptJson);
         void start();
         void stop();    
     private:
         void saveGatewayProp(const std::string & gwId, const std::string & rep);
+        bool saveDevData(const std::string & gwid, const std::string & devtype, const std::string & data);
         void delUpRepSub(const std::string & topic); 
         void procGWRepMsg(const std::string & gwId, const std::string & rep);
         virtual void queryCallback(const std::string & cliId, int seq, const std::string & gwid, const std::string & ret) override; 
@@ -33,7 +36,7 @@ class DevOptEnd : public QueryInterface{
         class BrokerMsgListener : public pigeon::MqttMsgListener {
             public:
                 DevOptEnd* mPtrDevOptEnd; 
-            
+
             public:
                 BrokerMsgListener():mPtrDevOptEnd(NULL) {
                 }
@@ -79,6 +82,12 @@ class DevOptEnd : public QueryInterface{
                     else {
                         std::cout<<"GwID:"<<gwid<<" devID:"<<devid<<std::endl;
                         std::cout<<"devData:"<<rep<<std::endl;
+                        if (NULL != mPtrDevOptEnd) {
+                            ret = mPtrDevOptEnd->saveDevData(gwid, devid, rep);
+                            if (false == ret) {
+                                std::cout<<"save fail!"<<std::endl;
+                            }
+                        }
                         return;
                     }
                 }
@@ -102,6 +111,7 @@ class DevOptEnd : public QueryInterface{
         std::shared_ptr<pigeon::MqttEnd> gPtrMqttEndInst;
 
         std::shared_ptr<pigeon::GatewayDataMgr> gPtrGwDMgr;
+        std::unique_ptr<pigeon::DevDataMgr>     mUqDevDMgr;
         std::unique_ptr<mqtt::MqttActionListener> gPtrMqttActLi;
 
         std::shared_ptr<BrokerMsgListener> bkListener;

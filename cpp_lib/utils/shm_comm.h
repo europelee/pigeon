@@ -76,7 +76,7 @@
 #define  MAX_CHN_NUM 2
 
 #define is_power_of_2(x) ((x) != 0 && (((x) & ((x) - 1)) == 0))
-#define min(a, b) (((a) < (b)) ? (a) : (b))
+//#define min(a, b) (((a) < (b)) ? (a) : (b))
 
 typedef struct	shm_comm_ctlinfo {
     unsigned char *head_maped;

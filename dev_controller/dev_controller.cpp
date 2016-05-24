@@ -85,8 +85,8 @@ class UsrPortalMsgListener : public pigeon::ZmqMsgListener {
 
 int main(int argc, char ** argv) {
 
-    if (argc < 9) {
-        std::cout<<"dev_controller mqtt_clientid mqtt_username mqtt_password mqtt_connuri, zmq_listenuri redisIPAddr redisPort zookeeperAddrList"<<std::endl;
+    if (argc < 10) {
+        std::cout<<"dev_controller mqtt_clientid mqtt_username mqtt_password mqtt_connuri, zmq_listenuri redisIPAddr redisPort zookeeperAddrList mongodbUri"<<std::endl;
         return -1;
     }
     char hostName[64] = {0};
@@ -127,7 +127,7 @@ int main(int argc, char ** argv) {
     gPtrDqEnd->start();
 
     //DevOptEnd
-    gPtrDOpEnd = std::unique_ptr<DevOptEnd>(new DevOptEnd(dev_ctl_id, gPtrZmqEndInst, argv[1], argv[2], argv[3], argv[4], argv[6], atoi(argv[7])));
+    gPtrDOpEnd = std::unique_ptr<DevOptEnd>(new DevOptEnd(dev_ctl_id, gPtrZmqEndInst, argv[1], argv[2], argv[3], argv[4], argv[6], atoi(argv[7]), argv[9]));
     gPtrDOpEnd->start();
 
     while(g_stopflag.test_and_set()) {

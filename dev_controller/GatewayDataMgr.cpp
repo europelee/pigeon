@@ -452,6 +452,10 @@ namespace pigeon {
     }
 
 
+    void GatewayDataMgr::saveDeviceData(const std::string & gwid, const std::string & devtype, const std::string & data, bool bScript) {
+    
+    }
+    
     void GatewayDataMgr::cacheUpRouterInfo(const std::string & optId, const std::string & cliId, int uSeq, const std::string & gwId) {
 
         redisAsyncCommand(mPtRedisAC, cacheUpRInfoCallback, (void *)optId.c_str(), "hmset %s %s %s %s %d %s %s", optId.c_str(), UpCacheRInfo::cliID_tag, cliId.c_str(), UpCacheRInfo::seq_tag, uSeq, UpCacheRInfo::gwid_tag, gwId.c_str());

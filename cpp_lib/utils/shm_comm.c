@@ -33,6 +33,8 @@
 * writer, you don't need extra locking to use these functions.
 */
 
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+
 static int I_LEVEL( const char * level) {
     if (0 == strcmp(level, SHM_LOG_DEBUG))
         return 1;

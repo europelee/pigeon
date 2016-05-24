@@ -37,6 +37,16 @@ namespace pigeon {
 
             static const std::string & devctl_svcinfo_addr_tag;
             static const std::string & devctl_svcinfo_id_tag;
+            
+            static const std::string & iot_gwid_dbtag;
+            static const std::string & iot_devtype_dbtag;
+            static const std::string & iot_devinstlist_dbtag;            
+            static const std::string & iot_devid_dbtag;
+            static const std::string & iot_devname_dbtag;
+            static const std::string & iot_devprop_dbtag;            
+        
+            static const std::string & iot_devdata_db_id;
+            static const std::string & iot_devcollection_id;
 
         public:
             static std::string genDevC2UMsg(int seq, const std::string & dest, const std::string & msgContent);

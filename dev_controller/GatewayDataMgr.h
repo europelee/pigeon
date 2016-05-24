@@ -38,6 +38,7 @@ namespace pigeon {
             void getGatewayProp(const std::list<std::string> &gwidList, QFuncObject *ptFuncObj);
             void getGatewayProp(const std::string & gwid, QFuncObject * ptFuncObj);            
             void saveGatewayProp(const std::string & gwid, const std::string & prop, bool bScript=true);
+            void saveDeviceData(const std::string & gwid, const std::string & devtype, const std::string & data, bool bScript=true);
             void cacheUpRepSub(const std::string & subKey, const std::string & subTopic, bool bScript=true);
             void delUpRepSub(const std::string & subKey, const std::string & subTopic, bool bScript=true);
         private:

@@ -18,9 +18,10 @@ const std::string & DevOptEnd::DEVOPTEND_NAME = "gwagent";
 const std::string & DevOptEnd::userportal_dest = "userportal";
 const std::string & DevOptEnd::uprep_sub_tag = "subscribe";
 
-DevOptEnd::DevOptEnd(const std::string & devCtlId, std::shared_ptr<pigeon::ZmqEnd> zmqEnd, const std::string & mqtt_clientid, const std::string & mqtt_username, const std::string &mqtt_password, const std::string &mqtt_connuri, const std::string & redisIp, int port):
+DevOptEnd::DevOptEnd(const std::string & devCtlId, std::shared_ptr<pigeon::ZmqEnd> zmqEnd, const std::string & mqtt_clientid, const std::string & mqtt_username, const std::string &mqtt_password, const std::string &mqtt_connuri, const std::string & redisIp, int port, const std::string & mongodbUri):
     mSharedPtrZmqEnd(zmqEnd), gPtrMqttEndInst(std::make_shared<pigeon::MqttEnd>(mqtt_connuri, mqtt_clientid, mqtt_username, mqtt_password)),
     gPtrGwDMgr(std::make_shared<pigeon::GatewayDataMgr>(redisIp, port)),
+    mUqDevDMgr(new pigeon::DevDataMgr(mongodbUri, pigeon::ISCRule::iot_devdata_db_id, pigeon::ISCRule::iot_devcollection_id)),    
     gPtrMqttActLi(new mqtt::MqttActionListener("subListener")), 
     bkListener(std::make_shared<BrokerMsgListener>()), 
     cb(gPtrMqttEndInst, *gPtrMqttActLi, bkListener), cSeq(0), mDevCtlId(devCtlId) {
@@ -97,6 +98,10 @@ void DevOptEnd::procOptCmd(const std::string & cliID, int seq, const std::string
 
 void DevOptEnd::saveGatewayProp(const std::string & gwId, const std::string & rep) {
     gPtrGwDMgr->saveGatewayProp(gwId, rep);
+}
+
+bool DevOptEnd::saveDevData(const std::string & gwid, const std::string & devtype, const std::string & data) {
+    return mUqDevDMgr->saveDevData(gwid, devtype, data);
 }
 
 void DevOptEnd::delUpRepSub(const std::string & topic) {
