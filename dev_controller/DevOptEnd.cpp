@@ -33,7 +33,8 @@ DevOptEnd::DevOptEnd(const std::string & devCtlId, std::shared_ptr<pigeon::ZmqEn
     }
 
 DevOptEnd::~DevOptEnd() {
-    std::cout<<"DevOptEnd destructor"<<std::endl;
+
+    LOG(TRACE)<<"DevOptEnd destructor";
 }
 
 void DevOptEnd::start() {
@@ -50,7 +51,7 @@ void DevOptEnd::stop() {
 void DevOptEnd::queryCallback(const std::string & cliId, int seq, const std::string & gwid, const std::string & ret) {
 
     if (cliId == pigeon::ISCRule::null_id) {
-        std::cout<<"queryCallback "+ret+" null"<<std::endl;
+        LOG(ERROR)<<"queryCallback "+ret+" null"<<std::endl;
         return;
     }
 
@@ -64,7 +65,7 @@ void DevOptEnd::queryCallback(const std::string & cliId, int seq, const std::str
     writer.EndObject();
     
     std::string msg = pigeon::ISCRule::genDevC2UMsg(seq, userportal_dest, s.GetString());    
-    std::cout<<"retjson:"<<msg<<std::endl;
+    LOG(INFO)<<"retjson:"<<msg<<std::endl;
     mSharedPtrZmqEnd->inputBackEndMsg(cliId, msg);
 } 
 

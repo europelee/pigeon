@@ -7,6 +7,7 @@
  */
 #include <iostream>
 #include <algorithm>
+#include "easylogging++.h"
 #include "MqttEnd.h"
 #include "MqttActionListener.h"
 #include "MqttMsgListener.h"
@@ -20,8 +21,8 @@ namespace pigeon {
     }
 
     MqttEnd::~MqttEnd() {
-        std::cout << "MqttEnd destructor" << std::endl;
-		std::cout << "Disconnecting..." << std::endl;
+        LOG(TRACE) << "MqttEnd destructor";
+		LOG(TRACE) << "Disconnecting...";
 		mqtt::itoken_ptr conntok = mAsyncCli->disconnect();
 		conntok->wait_for_completion();
     }
@@ -73,13 +74,13 @@ namespace pigeon {
         connOpts.set_password(mPassWord);
         try {
             mqtt::itoken_ptr conntok = mAsyncCli->connect(connOpts);
-            std::cout << "Waiting for the connection..." << std::flush;
+            LOG(INFO) << "Waiting for the connection...";
             conntok->wait_for_completion();
-            std::cout << "OK" << std::endl;
+
 
         }
         catch (const mqtt::exception& exc) {
-            std::cerr << "Error: " << exc.what() << std::endl;
+            LOG(ERROR) << "Error: " << exc.what();
             iRet = -1;
             return iRet;
         }

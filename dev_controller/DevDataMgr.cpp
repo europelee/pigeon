@@ -5,6 +5,7 @@
  * @version 0.0.1
  * @date 2016-05-23
  */
+#include "base.h"
 #include "ISCRule.h"
 #include "DevDataMgr.h"
 
@@ -41,7 +42,8 @@ namespace pigeon {
             }
         }
         catch (const mongocxx::exception & e) {
-            std::cout<<e.what()<<std::endl;
+
+            LOG(FATAL)<<e.what();
             ret = false;
             return ret;
         }

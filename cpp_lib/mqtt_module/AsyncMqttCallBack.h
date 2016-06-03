@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include "easylogging++.h"
 #include "MqttEnd.h"
 #include "MqttActionListener.h"
 #include <pthread.h>
@@ -33,30 +34,30 @@ namespace mqtt {
 
         // Re-connection failure
         virtual void on_failure(const mqtt::itoken& tok) {
-            std::cout << "Reconnection failed." << std::endl;
+            LOG(ERROR) << "Reconnection failed.";
             reconnect();
         }
 
         // Re-connection success
         virtual void on_success(const mqtt::itoken& tok) {
-            std::cout << "Reconnection success" << std::endl;;
+            LOG(INFO) << "Reconnection success";
             cli_.get()->subscribe(listener_);
         }
 
         virtual void connection_lost(const std::string& cause) {
-            std::cout << "\nConnection lost" << std::endl;
+             LOG(INFO) << "Connection lost";
             if (!cause.empty())
-                std::cout << "\tcause: " << cause << std::endl;
+                LOG(ERROR) << "cause: " << cause;
 
-            std::cout << "Reconnecting." << std::endl;
+            LOG(INFO) << "Reconnecting.";
             nretry_ = 0;
             reconnect();
         }
 
         virtual void message_arrived(const std::string& topic, mqtt::message_ptr msg) {
-            std::cout << "Message arrived" << std::endl;
-            std::cout << "\ttopic: '" << topic << "'" << std::endl;
-            std::cout << "\t'" << msg->to_str() << "'\n" << std::endl;
+            LOG(DEBUG) << "Message arrived";
+            LOG(DEBUG) << "topic: '" << topic << "'";
+            LOG(DEBUG) << msg->to_str() ;
             if (mPtrMsgListener) {
                 mPtrMsgListener.get()->onSuccess(topic, msg->to_str());
             }
@@ -64,8 +65,8 @@ namespace mqtt {
 
         virtual void delivery_complete(mqtt::idelivery_token_ptr token) {
 
-            std::cout << "Delivery complete for token: " 
-                << (token ? token->get_message_id() : -1) << std::endl;
+             LOG(DEBUG)<< "Delivery complete for token: " 
+                << (token ? token->get_message_id() : -1);
         }
 
         private:

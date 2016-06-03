@@ -13,6 +13,7 @@
 #include <atomic>
 #include <iostream>
 #include <memory>
+#include "base.h"
 #include "ZmqEnd.h"
 #include "ZmqMsgListener.h"
 #include "rapidjson/document.h"
@@ -23,6 +24,8 @@
 #include "DevCtlServiceInfo.h"
 #include "DevCtlServiceReg.h"
 
+INITIALIZE_EASYLOGGINGPP
+
 static std::atomic_flag g_stopflag = ATOMIC_FLAG_INIT;
 static std::string  dev_ctl_id = "pigeon";
 static std::string  service_path = "/pigeon/devctlsvc/inst-";
@@ -32,7 +35,7 @@ std::unique_ptr<DevQueryEnd> gPtrDqEnd = nullptr;
 std::unique_ptr<DevOptEnd> gPtrDOpEnd = nullptr;
 
 static void sigIntHandler(int sig) {
-    std::cout<<"sig no "<<sig<<std::endl;
+    LOG(TRACE)<<"sig no "<<sig;
     g_stopflag.clear();
 }
 
@@ -40,7 +43,7 @@ class UsrPortalMsgListener : public pigeon::ZmqMsgListener {
 
     public:
         virtual void onSuccess(const std::string & cliID, const std::string & cliMsg) override {
-            std::cout<<"UPMsg:"<<cliID<<" msg:"<<cliMsg<<std::endl;
+            LOG(INFO)<<"UPMsg:"<<cliID<<" msg:"<<cliMsg;
             /*process UPMsg into MqttMsg*/
             //test
             /**
@@ -74,21 +77,25 @@ class UsrPortalMsgListener : public pigeon::ZmqMsgListener {
         }
 
         virtual void onError(int errCode, const std::string & err) override {
-            std::cout<<"UPMsg: errcode:"<<errCode<<" errinfo:"<<err<<std::endl;
+            LOG(ERROR)<<"UPMsg: errcode:"<<errCode<<" errinfo:"<<err;
         }
 
         ~UsrPortalMsgListener() {
-            std::cout<<"UsrPortalMsgListener destructor"<<std::endl;
+            LOG(DEBUG)<<"UsrPortalMsgListener destructor";
         }
 };
 
 
 int main(int argc, char ** argv) {
+    
+    el::Configurations confFromFile("./dev_controller-logger.conf");
+    el::Loggers::reconfigureAllLoggers(confFromFile);
 
     if (argc < 10) {
         std::cout<<"dev_controller mqtt_clientid mqtt_username mqtt_password mqtt_connuri, zmq_listenuri redisIPAddr redisPort zookeeperAddrList mongodbUri"<<std::endl;
         return -1;
     }
+    
     char hostName[64] = {0};
 
     int ret = gethostname(hostName, sizeof(hostName)-1);
@@ -118,7 +125,7 @@ int main(int argc, char ** argv) {
     DevCtlServiceReg  sGeg(argv[8], service_path, sInfo.getServiceInfoJson());
     ret = sGeg.RegService();
     if (ret != 0) {
-        
+        LOG(ERROR) << "reg own service into zookeeper fail!";        
         gPtrZmqEndInst->finMsgLoop();
         return -1;
     }

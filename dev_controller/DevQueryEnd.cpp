@@ -6,6 +6,7 @@
  * @date 2016-03-10
  */
 #include <memory>
+#include "base.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/reader.h"
@@ -24,7 +25,7 @@ DevQueryEnd::DevQueryEnd(std::shared_ptr<pigeon::ZmqEnd> zmqEnd, const std::stri
 }
 
 DevQueryEnd::~DevQueryEnd() {
-    std::cout<<"DevQueryEnd destructor"<<std::endl;
+    LOG(TRACE)<<"DevQueryEnd destructor";
 }
 
 void DevQueryEnd::start() {
@@ -45,7 +46,7 @@ void DevQueryEnd::procQuery(const std::string &cliID, int seq, const std::string
     d.Parse(queryJson.c_str());
     rapidjson::Value& actionV = d[pigeon::ISCRule::msg_action_field.c_str()];
     rapidjson::Value& gwIdV = d[pigeon::ISCRule::msg_param_field.c_str()][pigeon::ISCRule::msg_gwid_field.c_str()];
-    std::cout<<"action:"<<actionV.GetString()<<" param gwid"<<gwIdV.GetString()<<std::endl;
+    LOG(INFO)<<"action:"<<actionV.GetString()<<" param gwid"<<gwIdV.GetString();
     if (actionV.GetString() == AGENTPROP_ACTION) {
         QFuncObject * ptQf = new QFuncObject(std::bind(&DevQueryEnd::queryCallback, this, cliID, seq, gwIdV.GetString(), std::placeholders::_1));
         mPtrGwDMgr->getGatewayProp(gwIdV.GetString(), ptQf);
@@ -53,7 +54,7 @@ void DevQueryEnd::procQuery(const std::string &cliID, int seq, const std::string
 }
 
 void DevQueryEnd::queryCallback(const std::string & cliId, int seq, const std::string & gwid, const std::string & ret) {
-    std::cout<<"queryCallback"<<" seq "<<seq<<" gwid"<<gwid<<std::endl;
+    LOG(DEBUG)<<"queryCallback"<<" seq "<<seq<<" gwid"<<gwid;
 
     rapidjson::StringBuffer s;
     rapidjson::Writer<rapidjson::StringBuffer> writer(s);
@@ -70,7 +71,7 @@ void DevQueryEnd::queryCallback(const std::string & cliId, int seq, const std::s
     writer.EndObject();
 
     std::string msg = pigeon::ISCRule::genDevC2UMsg(seq, userportal_dest, s.GetString());    
-    std::cout<<"retjson:"<<msg<<std::endl;
+    LOG(INFO)<<"retjson:"<<msg;
     mSharedPtrZmqEnd->inputQueryRet(cliId, msg);
 } 
 

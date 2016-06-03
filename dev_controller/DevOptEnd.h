@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <string>
+#include "base.h"
 #include "ZmqEnd.h"
 #include "MqttEnd.h"
 #include "MqttActionListener.h"
@@ -41,13 +42,13 @@ class DevOptEnd : public QueryInterface{
                 BrokerMsgListener():mPtrDevOptEnd(NULL) {
                 }
                 virtual void onSuccess(const std::string & topic, const std::string & rep) override {
-                    std::cout<<"BRKMsg: topic:"<<topic<<" rep:"<<rep<<std::endl;
+                    LOG(INFO)<<"BRKMsg: topic:"<<topic<<" rep:"<<rep;
                     /*check if msg would be from data collecting or up's request*/
 
                     /*process MqttMsg into UPMsg rep*/
                     const std::string & gwID0 = pigeon::ISCRule::getUPRepID(topic);
                     if (gwID0 == pigeon::ISCRule::null_id) {
-                        std::cout<<"not get UPID"<<std::endl;
+                        LOG(DEBUG) << "not get UPID";
                     }
                     else {
                         /*ZmqEnd back rep*/
@@ -61,7 +62,7 @@ class DevOptEnd : public QueryInterface{
                     //collecting gateway data
                     const std::string & gwID = pigeon::ISCRule::getGWID(topic);
                     if (gwID == pigeon::ISCRule::null_id) {
-                        std::cout<<"not get GWID"<<std::endl;
+                        LOG(DEBUG) << "not get GWID";
                     }
                     else {
                         //save into db
@@ -77,15 +78,19 @@ class DevOptEnd : public QueryInterface{
                     std::string devid = "";
                     bool ret = pigeon::ISCRule::getGwDevID(topic, gwid, devid);
                     if (false == ret) {
-                        std::cout<<"not get GWID, devid"<<std::endl;
+                        LOG(ERROR)<<"not get GWID, devid FROM "<< topic;
                     }
                     else {
-                        std::cout<<"GwID:"<<gwid<<" devID:"<<devid<<std::endl;
-                        std::cout<<"devData:"<<rep<<std::endl;
+                        
+                        LOG(DEBUG)<<"GwID:"<<gwid<<" devID:"<<devid;
+                        LOG(DEBUG)<<"devData:"<<rep;
+                        
                         if (NULL != mPtrDevOptEnd) {
+
                             ret = mPtrDevOptEnd->saveDevData(gwid, devid, rep);
                             if (false == ret) {
-                                std::cout<<"save fail!"<<std::endl;
+
+                                LOG(ERROR)<<"save fail!";
                             }
                         }
                         return;
@@ -93,11 +98,11 @@ class DevOptEnd : public QueryInterface{
                 }
 
                 virtual void onError(int errCode, const std::string & errInfo) override {
-                    std::cout<<"BRKMsg: errCode:"<<errCode<<" errInfo:"<<errInfo<<std::endl;
+                    LOG(ERROR)<<"BRKMsg: errCode:"<<errCode<<" errInfo:"<<errInfo;
                 }
 
                 ~BrokerMsgListener() {
-                    std::cout<<"BrokerMsgListener destructor"<<std::endl;
+                    LOG(TRACE)<<"BrokerMsgListener destructor";
                     mPtrDevOptEnd = NULL;
                 }
         };

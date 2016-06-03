@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream> 
 #include <ISCRule.h>
+#include "base.h"
 #include <GatewayPropSon.h>
 #include "GatewayDataMgr.h"
 
@@ -478,7 +479,7 @@ namespace pigeon {
         std::stringstream buffer;
         buffer << iscript.rdbuf();
         scriptStream = buffer.str();
-        std::cout<<scriptStream<<std::endl;
+        LOG(DEBUG)<<scriptStream;
         iscript.close();
         iscript.clear();
         return true;

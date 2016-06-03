@@ -7,13 +7,13 @@ MONGOCXX_PATH ?= /root/db/mongo-cli/mongo-cxx-driver/build/install
 
 RAPIDJSON_PATH ?= $(PIGEON_CPPLIB_PATH)/third_party/rapidjson
 CXXFLAGS += -Wall -std=c++11
-CPPFLAGS += -I$(PIGEON_ZK_INCPATH) -I$(RAPIDJSON_PATH)/include -I$(PIGEON_CPPLIB_PATH)/third_party/hiredis-lib/inc -I$(PIGEON_CPPLIB_PATH)/isc -I$(PIGEON_CPPLIB_PATH)/zmq_module -I$(PIGEON_CPPLIB_PATH)/mqtt_module -I$(PIGEON_CPPLIB_PATH)/utils  -I$(PAHO_CPP_PATH)/src -I$(MONGOCXX_PATH)/include/bsoncxx/v_noabi -I$(MONGOCXX_PATH)/include/mongocxx/v_noabi
+CPPFLAGS += -I$(PIGEON_CPPLIB_PATH)/third_party/easyloggingpp -I$(PIGEON_ZK_INCPATH) -I$(RAPIDJSON_PATH)/include -I$(PIGEON_CPPLIB_PATH)/third_party/hiredis-lib/inc -I$(PIGEON_CPPLIB_PATH)/isc -I$(PIGEON_CPPLIB_PATH)/zmq_module -I$(PIGEON_CPPLIB_PATH)/mqtt_module -I$(PIGEON_CPPLIB_PATH)/utils  -I$(PAHO_CPP_PATH)/src -I$(MONGOCXX_PATH)/include/bsoncxx/v_noabi -I$(MONGOCXX_PATH)/include/mongocxx/v_noabi
 
 ifdef DEBUG
-  CPPFLAGS += -DDEBUG
+  CPPFLAGS += -DDEBUG -DELPP_THREAD_SAFE -DELPP_STACKTRACE_ON_CRASH -DELPP_FORCE_USE_STD_THREAD  
   CXXFLAGS += -g -O0
 else
-  CPPFLAGS += -D_NDEBUG
+  CPPFLAGS += -D_NDEBUG  -DELPP_THREAD_SAFE -DELPP_STACKTRACE_ON_CRASH -DELPP_FORCE_USE_STD_THREAD
   CXXFLAGS += -O2
 endif
 

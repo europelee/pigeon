@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <string>
+#include "easylogging++.h"
 #include "mqtt/async_client.h"
 
 namespace mqtt {
@@ -18,20 +19,21 @@ namespace mqtt {
         std::string name_;
 
         virtual void on_failure(const mqtt::itoken& tok) {
-            std::cout << name_ << " failure";
+            LOG(ERROR) << name_ << " failure";
             if (tok.get_message_id() != 0)
-                std::cout << " (token: " << tok.get_message_id() << ")" << std::endl;
-            std::cout << std::endl;
+                LOG(ERROR) << " (token: " << tok.get_message_id() << ")" ;
+
         }
 
         virtual void on_success(const mqtt::itoken& tok) {
-            std::cout << name_ << " success";
+            LOG(TRACE) << name_ << " success";
             if (tok.get_message_id() != 0)
-                std::cout << " (token: " << tok.get_message_id() << ")" << std::endl;
+                LOG(DEBUG) << " (token: " << tok.get_message_id() << ")";
             if (!tok.get_topics().empty())
-                std::cout << "\ttoken topic: '" << tok.get_topics()[0] << "', ..." << std::endl;
-            std::cout << std::endl;
+                LOG(DEBUG) << "\ttoken topic: '" << tok.get_topics()[0] << "', ...";
+
         }
+
 
         private:
         /** Non-copyable */

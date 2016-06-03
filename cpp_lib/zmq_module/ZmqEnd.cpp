@@ -8,6 +8,7 @@
 #include <array>
 #include <iostream>
 #include <stdlib.h>
+#include "easylogging++.h"
 #include "ZmqEnd.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -28,7 +29,7 @@ namespace pigeon {
                                            }
 
     ZmqEnd::~ZmqEnd() {
-        std::cout << "ZmqEnd destructor" << std::endl;
+        LOG(TRACE) << "ZmqEnd destructor";
         int ret = fini_memqueue(1024*1024, &mCommCtlInfo, STREAM_IN_DIRECT); 
         assert(ret==0);
     }
@@ -61,7 +62,7 @@ namespace pigeon {
 
     void ZmqEnd::frontThreadFunc() {
 
-        std::cout<<"frontThreadFunc start"<<std::endl;
+        LOG(INFO)<<"frontThreadFunc start";
 
         mFrontSock.bind(mExternUri);
         mMiddleSock.bind(mInProcUri);
@@ -90,9 +91,9 @@ namespace pigeon {
 
                     //debug
                     
-                    std::cout<<"debug:"<<std::string(static_cast<char*>(message.data()), message.size())<<std::endl;
+                    LOG(DEBUG)<<"debug:"<<std::string(static_cast<char*>(message.data()), message.size());
                     if (iFrame >= mZmqFrameNum) {
-                        std::cout<<"error: frame num > "<<mZmqFrameNum<<std::endl;
+                        LOG(ERROR)<<"error: frame num > "<<mZmqFrameNum;
                         if (nullptr != mPtrMsgListener.get()) {
                             mPtrMsgListener.get()->onError(0, std::string("err: framenum > "+mZmqFrameNum));
                         }
@@ -151,11 +152,11 @@ namespace pigeon {
 
         }//while(!mThreadInter)
 
-        std::cout<<"frontThreadFunc end"<<std::endl;
+        LOG(INFO)<<"frontThreadFunc end";
     }
 
     void ZmqEnd::backThreadFunc() {
-        std::cout<<"backThreadFunc start"<<std::endl;
+        LOG(INFO)<<"backThreadFunc start";
 
         mBackSock.connect(mInProcUri);
 
@@ -164,7 +165,7 @@ namespace pigeon {
             int wRet = mBinSem.timeWait(3);
             if (wRet == -1) {
                 if (errno != ETIMEDOUT)
-                    std::cout<<strerror(errno)<<std::endl;
+                    LOG(ERROR)<<strerror(errno);
                 continue;
             }
             /*get msg from queue*/
@@ -172,7 +173,7 @@ namespace pigeon {
             int ret = shm_read(&mCommCtlInfo, (void *)&ptRepO, sizeof(void *), STREAM_IN_DIRECT);
             if (SHM_OPT_FAIL == ret)
             {
-                std::cout<<"shm_read fail"<<std::endl;
+                LOG(ERROR)<<"shm_read fail";
                 continue;
             }
             /*send msg with zmq*/
@@ -190,7 +191,7 @@ namespace pigeon {
             ptRepO = nullptr;
         }
 
-        std::cout<<"backThreadFunc end"<<std::endl;    
+        LOG(INFO)<<"backThreadFunc end";    
     }
 
     int ZmqEnd::startMsgLoop() {
@@ -212,7 +213,7 @@ namespace pigeon {
         mThreadInter = true;
         mPtrMsgRThread->join();
         mPtrMsgDThread->join();
-        std::cout<<"finMsgLoop end"<<std::endl;
+        LOG(INFO)<<"finMsgLoop end";
         return 0;
 
     }
@@ -226,7 +227,7 @@ namespace pigeon {
         if (SHM_OPT_FAIL == ret)
         {
             releaseRepInfoObj(&ptRepO);
-            std::cout<<"shm_write fail"<<std::endl;
+            LOG(ERROR)<<"shm_write fail";
             iRet = -1;
             return iRet;
         }
@@ -250,7 +251,7 @@ namespace pigeon {
         writer.EndObject();
 
         const std::string & tmp = s.GetString();
-        std::cout<<"input debug:"<<tmp<<std::endl;
+        LOG(DEBUG)<<"input debug:"<<tmp;
         int psize = tmp.size();
         zmq::message_t outPayloadMsg(psize);
         memcpy((void *)outPayloadMsg.data(), tmp.c_str(), psize);

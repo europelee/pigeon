@@ -10,6 +10,7 @@
  *
  */
 #include <iostream>
+#include "easylogging++.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/reader.h"
@@ -49,7 +50,7 @@ namespace pigeon {
         bool bRet = false;
         rapidjson::Document d;
         if (false == d.Parse(propJson)) {
-            std::cout<<"Parse inputJson fail"<<std::endl;
+            LOG(DEBUG)<<"Parse inputJson fail";
             return false;
         }
         if (d[online_proptag].IsInt()) {
@@ -57,7 +58,7 @@ namespace pigeon {
             bRet = true;
         }
         else {
-            std::cout<<online_proptag<<" value not int"<<std::endl;
+            LOG(ERROR)<<online_proptag<<" value not int";
             bRet = false; 
         }
 
