@@ -9,6 +9,7 @@
 #define _AGENT_FRONTEND_H
 
 #include <memory>
+#include "easylogging++.h"
 #include "MqttEnd.h"
 #include "AsyncMqttCallBack.h"
 #include "MqttMsgListener.h"
@@ -24,7 +25,7 @@ class AgentFrontEnd : public MPEndListener {
         }
 
         ~AgentFrontEnd() {
-            std::cout<<"AgentFrontEnd destructor"<<std::endl;
+            LOG(ERROR)<<"AgentFrontEnd destructor";
         }
     public:
         virtual void onData(const std::string & topic, const std::string & content) override {

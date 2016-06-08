@@ -7,6 +7,7 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include "base.h"
 #include "DevCtlServiceReg.h"
 
 DevCtlServiceReg::DevCtlServiceReg(const std::string & zkAddrList, const std::string & nodePath, const std::string & nodeValue):mZKAddrList(zkAddrList), mNodePath(nodePath), mNodeValue(nodeValue) , mNodeRealPath(""), mZKHdl(NULL){
@@ -31,19 +32,19 @@ int DevCtlServiceReg::RegService() {
 
     if (mZKHdl ==NULL)  
     {  
-        fprintf(stderr, "Error when connecting to zookeeper servers...\n");  
+        LOG(ERROR)<<"Error when connecting to zookeeper servers...";
         return -1;
     }
 
     int ret = mkdirp(mZKHdl, mNodePath.c_str(), mNodePath.c_str());
     if (ret != 0) {
-        printf("mkdirp fail\n");
+        LOG(ERROR)<<"mkdirp fail";
         return -1;
     }
 
     ret = zoo_set(mZKHdl, mNodeRealPath.c_str(),  mNodeValue.c_str(), mNodeValue.size(), -1);
     if(ret != ZOK){
-        fprintf(stderr,"failed to set the data of path %s!\n", mNodeRealPath.c_str());
+        LOG(ERROR)<<"failed to set the data of path:"<<mNodeRealPath.c_str();
         return -1;
     }
 
@@ -57,10 +58,10 @@ int DevCtlServiceReg::createNode(zhandle_t *zkhandle, const char * path, int fla
     int ret = zoo_exists(zkhandle, path,0,NULL);
     if(ret != ZOK){
         ret = zoo_create(zkhandle,path, NULL,0,&ZOO_OPEN_ACL_UNSAFE, flags, path_buffer,bufferlen);
-        printf("path_buffer:%s\n", path_buffer);
+        LOG(TRACE)<<"path_buffer:"<<path_buffer;
         mNodeRealPath = path_buffer;
         if(ret != ZOK){
-            fprintf(stderr, "Error when create path :%s retcode:%d\n", path, ret);  
+            LOG(ERROR)<<"Error when create path :"<<path<<" retcode:"<<ret;
             return -1;  
         }
 

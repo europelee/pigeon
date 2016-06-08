@@ -11,6 +11,7 @@
 #include <string.h>
 #include <string>
 #include <iostream>
+#include "easylogging++.h"
 #include "httpmsglistener.h"
 
 namespace pigeon {
@@ -26,12 +27,12 @@ namespace pigeon {
             char * ptrData = (char *)malloc(len+1);
             memcpy(ptrData, buffer, len);
             ptrData[len] = 0;
-            fprintf(stdout, "%s\n", ptrData);        
+            LOG(DEBUG)<<"onData:"<<ptrData;        
             free(ptrData);
         }
 
         virtual void onFinish() override {
-            std::cout<<"finish gwagent reg-request"<<std::endl;    
+            LOG(INFO)<<"finish gwagent reg-request";    
         }
 
         virtual void onError(HttpReqErr errCode, const std::string & errInfo) override {

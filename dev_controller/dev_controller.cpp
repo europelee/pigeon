@@ -90,7 +90,7 @@ int main(int argc, char ** argv) {
     
     el::Configurations confFromFile("./dev_controller-logger.conf");
     el::Loggers::reconfigureAllLoggers(confFromFile);
-
+    
     if (argc < 10) {
         std::cout<<"dev_controller mqtt_clientid mqtt_username mqtt_password mqtt_connuri, zmq_listenuri redisIPAddr redisPort zookeeperAddrList mongodbUri"<<std::endl;
         return -1;

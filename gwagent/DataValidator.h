@@ -8,6 +8,7 @@
 #ifndef _DATA_VALIDATOR_H
 #define _DATA_VALIDATOR_H
 
+#include "easylogging++.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/reader.h"  
@@ -32,7 +33,7 @@ class DataValidator {
             rapidjson::Document sd;    
             if (false == sd.Parse(schemaJson)) {
                 // the schema is not a valid JSON.
-                std::cout<<"Parse schemaJson fail"<<std::endl;
+                LOG(ERROR)<<"Parse schemaJson fail";
                 bInit = false;
                 return;
             }
@@ -54,7 +55,7 @@ class DataValidator {
             rapidjson::Document d;
             if (false == d.Parse(data.c_str())) {
                 // the input is not a valid JSON.
-                std::cout<<"Parse inputJson fail"<<std::endl;
+                LOG(ERROR)<<"Parse inputJson fail";
                 return false;
             }
 
@@ -64,15 +65,15 @@ class DataValidator {
                 // Output diagnostic information
                 rapidjson::StringBuffer sb;
                 validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
-                std::cout<<"Invalid schema: "<<sb.GetString()<<std::endl;
-                std::cout<<"Invalid keyword: "<<validator.GetInvalidSchemaKeyword()<<std::endl;
+                LOG(ERROR)<<"Invalid schema: "<<sb.GetString();
+                LOG(ERROR)<<"Invalid keyword: "<<validator.GetInvalidSchemaKeyword();
                 sb.Clear();
                 validator.GetInvalidDocumentPointer().StringifyUriFragment(sb);
-                std::cout<<"Invalid document: "<<sb.GetString()<<std::endl;
+                LOG(ERROR)<<"Invalid document: "<<sb.GetString();
                 return false;
             }         
             else {    
-                std::cout<<"meet schema"<<std::endl;
+                LOG(DEBUG)<<"meet schema";
             } 
 
             return true;  

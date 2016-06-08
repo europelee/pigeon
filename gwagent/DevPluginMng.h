@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "easylogging++.h"
 #include "DevPluginInfo.h"
 class DevPluginMng {
     public:
@@ -38,7 +39,7 @@ class DevPluginMng {
 
             if(!(d = opendir(dllDirPath.c_str())))
             {
-                printf("error opendir %s!!!\n", dllDirPath.c_str());
+                LOG(ERROR)<<"error opendir "<<dllDirPath;
                 return ;
             }
 

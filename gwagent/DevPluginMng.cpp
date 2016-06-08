@@ -10,6 +10,7 @@
 #include <utility>
 #include <chrono>
 #include <thread>
+#include "easylogging++.h"
 #include "dev_plugin.h"
 #include "DevPluginMng.h"
 
@@ -30,7 +31,7 @@ bool DevPluginMng::load(const std::string &dllDirPath) {
 
     this->travelEach(dllDirPath, [this](const std::string & pluginFilePath){
 
-            std::cout<<"loading "<<pluginFilePath<<std::endl;
+            LOG(INFO)<<"loading "<<pluginFilePath;
             if (pluginFilePath.size() <= 0) {
             return;
             }
@@ -43,7 +44,7 @@ bool DevPluginMng::load(const std::string &dllDirPath) {
             devplug_init_inf ptFunc = NULL;
             ptFunc = (devplug_init_inf)dlsym(ptDll, DevPluginMng::mDevPlugInitKeyStr.c_str());               
             if (ptFunc == NULL) {
-            printf("can not find %s function: %s!\n", DevPluginMng::mDevPlugInitKeyStr.c_str(), dlerror());
+            LOG(ERROR)<<"can not find function: "<<DevPluginMng::mDevPlugInitKeyStr<<" "<<dlerror();
             dlclose(ptDll);
             return;
             }
@@ -56,7 +57,7 @@ bool DevPluginMng::load(const std::string &dllDirPath) {
             if (iRet.second == true) {
             }
             else {
-                std::cout<<plugKeyName<<" already exist!"<<std::endl;
+                LOG(ERROR)<<plugKeyName<<" already exist!";
                 dlclose(ptDll);
                 delete info;
             }
@@ -69,7 +70,7 @@ bool DevPluginMng::load(const std::string &dllDirPath) {
 bool DevPluginMng::load(const std::string & dllDirPath, const std::string &plugKeyName) {
     bool ret = false;
     if (NULL != this->getPluginByName(plugKeyName)) {
-        std::cout<<plugKeyName<<" already loaded "<<std::endl; 
+        LOG(ERROR)<<plugKeyName<<" already loaded "; 
         ret = false;
     }
     else {
@@ -97,7 +98,7 @@ bool DevPluginMng::load(const std::string & dllDirPath, const std::string &plugK
         devplug_init_inf ptFunc = NULL;
         ptFunc = (devplug_init_inf)dlsym(ptDll, DevPluginMng::mDevPlugInitKeyStr.c_str());               
         if (ptFunc == NULL) {
-            printf("can not find %s function: %s!\n", DevPluginMng::mDevPlugInitKeyStr.c_str(), dlerror());
+            LOG(ERROR)<<"can not find function: "<<DevPluginMng::mDevPlugInitKeyStr<<" "<<dlerror();
             dlclose(ptDll);
             ret = false;
             return ret;
@@ -137,14 +138,14 @@ bool DevPluginMng::unLoad() {
 bool DevPluginMng::unLoad(const std::string & plugKeyName) {
     bool ret = false;
     if (NULL == this->getPluginByName(plugKeyName)) {
-        std::cout<<plugKeyName<<" not exist!"<<std::endl;
+        LOG(ERROR)<<plugKeyName<<" not exist!";
         ret = false;
     }
     else {
         DevPluginInfo * pInfo = mPlugList.find(plugKeyName)->second;
 
         if (NULL == pInfo) {
-            std::cout<<plugKeyName<<" NULL"<<std::endl;
+            LOG(ERROR)<<plugKeyName<<" NULL";
             ret = false;
         }
         else {

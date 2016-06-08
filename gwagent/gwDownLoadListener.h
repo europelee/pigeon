@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
-
+#include "easylogging++.h"
 #include "httpmsglistener.h"
 
 namespace pigeon {
@@ -32,7 +32,7 @@ namespace pigeon {
                 if (fp==NULL) {
                     fp = fopen(mFileName.c_str(), "wb");
                     if (fp==NULL) {
-                        std::cout<<std::string(strerror(errno));
+                        LOG(ERROR)<<std::string(strerror(errno));
                         return;
                     }
                 }
@@ -40,7 +40,7 @@ namespace pigeon {
             }
 
             virtual void onFinish() override {
-                std::cout<<"finish http get request"<<std::endl;
+                LOG(INFO)<<"finish http get request";
                 if (fp!=NULL) {
                     fflush(fp);
                     fclose(fp);

@@ -52,29 +52,29 @@ namespace pigeon {
     void GatewayDataMgr::connectCallback(const redisAsyncContext *c, int status) {
 
         if (status != REDIS_OK) {
-            printf("Error: %s\n", c->errstr);
+            LOG(ERROR)<<"Error: "<<c->errstr;
             aeStop((aeEventLoop*)c->data);
             return;
         }
 
-        printf("Connected...\n");
+        LOG(INFO)<<"Connected...";
     }
 
     void GatewayDataMgr::disconnectCallback(const redisAsyncContext *c, int status) {
 
         if (status != REDIS_OK) {
-            printf("Error: %s\n", c->errstr);
+            LOG(ERROR)<<"Error: "<<c->errstr;
             aeStop((aeEventLoop*)(c->data));
             return;
         }
 
-        printf("Disconnected...\n");
+        LOG(INFO)<<"Disconnected...";
         aeStop((aeEventLoop*)(c->data));
     }
 
     void GatewayDataMgr::quitConnCallBack(redisAsyncContext *c, void *r, void *privdata) {
 
-        printf("quit");
+        LOG(INFO)<<"quit";
         redisAsyncDisconnect(c);
     } 
 
@@ -87,7 +87,7 @@ namespace pigeon {
         mPtRedisAC = redisAsyncConnect(mRedisSvrIPAddr.c_str(), mPort);
         if (mPtRedisAC->err) {
             /* Let *c leak for now... */
-            printf("Error: %s\n", mPtRedisAC->errstr);
+            LOG(ERROR)<<"Error: "<<mPtRedisAC->errstr;
             iRet = -1;
             return iRet;
         }
@@ -104,10 +104,10 @@ namespace pigeon {
     } 
 
     void GatewayDataMgr::loopThread() {
-        printf("start loopThread\n");
+        LOG(INFO)<<"start loopThread";
         aeMain(mPtEventLoop);
         aeDeleteEventLoop(mPtEventLoop);
-        printf("end loopThread\n");
+        LOG(INFO)<<"end loopThread";
         return;
     }
 
@@ -123,18 +123,18 @@ namespace pigeon {
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
 
-            printf("[%s]-delUpRCache: reply null\n", (char *)privdata);
+            LOG(TRACE)<<"["<<(char *)privdata<<"]"<<"-delUpRCache: reply null";
             return;
         }
-
-        printf("[%s]: %lld\n", "delUpRCacheCallback", reply->integer);
+        
+        LOG(DEBUG)<<"[delUpRCacheCallback]:"<<reply->integer;
     }
 
     void GatewayDataMgr::getUpRInfoCallback(redisAsyncContext *c, void *r, void *privdata) {
 
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            printf("getUpRouterInfo reply is null\n");
+            LOG(ERROR)<<"getUpRouterInfo reply is null";
 
             UpCacheRInfo* ptQf = (UpCacheRInfo *)privdata;
             delete ptQf;
@@ -207,7 +207,7 @@ namespace pigeon {
     void GatewayDataMgr::updateGWPropCallback(redisAsyncContext *c, void *r, void *privdata) {
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            printf("[%s] updateGWPropCallback: reply null\n", (char*)privdata);
+            LOG(ERROR)<<"updateGWPropCallback: reply null";
             if (NULL != privdata) {
                 free(privdata);
                 privdata = NULL;
@@ -215,7 +215,7 @@ namespace pigeon {
             return;
         }
 
-        printf("[%s] updateGWPropCallback: %s\n", (char*)privdata, reply->str);
+        LOG(TRACE)<<"["<<(char *)privdata<<"]"<<" updateGWPropCallback:"<<reply->str;
 
         if (NULL != privdata) {
             free(privdata);
@@ -230,23 +230,23 @@ namespace pigeon {
         GatewayProp * gp = (GatewayProp *)privdata;
         
         if (!gp) {
-            printf("happen exception updateGWPropCallbackExScript privdata is null\n");
+            LOG(ERROR)<<"happen exception updateGWPropCallbackExScript privdata is null";
             return;
         }
 
         if (reply == NULL) {
-            
-            printf("[%s] updateGWPropCallback: reply null\n", gp->mGwId.c_str());
+            LOG(ERROR)<<"["<<gp->mGwId.c_str()<<"]"<<" updateGWPropCallback: reply null"; 
             delete gp;
             gp = NULL;
             return;
         }
 
-        printf("[%s] updateGWPropCallback: %s\n", gp->mGwId.c_str(), reply->str);
+        LOG(TRACE)<<gp->mGwId.c_str()<<" updateGWPropCallback: "<<reply->str;
+
         if (reply->type == REDIS_REPLY_ERROR) {
             if (NULL != strstr(reply->str, "NOSCRIPT No matching script")) {
                 //USE EVAL
-                printf("redis-server not cache, we need eval\n");
+                LOG(ERROR)<<"redis-server not cache, we need eval";
                 std::string scriptStream = "";
                 bool ret = readScript(saveGatewayProp_script, scriptStream);
 
@@ -274,7 +274,7 @@ namespace pigeon {
         MemMap * ptMap = (MemMap *)privdata;
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            printf("[%s] delUpRepSubCallbackExScript: reply null\n", ptMap!=NULL?ptMap->mKey.c_str():NULL);
+            LOG(ERROR)<<(ptMap!=NULL?ptMap->mKey.c_str():NULL)<<"delUpRepSubCallbackExScript: reply null`";
             if (NULL != ptMap) {
                 delete ptMap;
                 ptMap = NULL;
@@ -284,16 +284,16 @@ namespace pigeon {
 
         
         if (!ptMap) {
-            printf("happen exception delUpRepSubCallbackExScript privdata is null\n");
+            LOG(ERROR)<<"happen exception delUpRepSubCallbackExScript privdata is null";
             return;
         }
 
-        printf("[%s] delUpRepSubCallbackExScript: %lld\n", ptMap->mKey.c_str(), reply->integer);
 
+        LOG(TRACE)<<ptMap->mKey.c_str()<<" delUpRepSubCallbackExScript:"<<reply->integer;
         if (reply->type == REDIS_REPLY_ERROR) {
             if (NULL != strstr(reply->str, "NOSCRIPT No matching script")) {
                 //USE EVAL
-                printf("redis-server not cache, we need eval\n");
+
                 std::string scriptStream = "";
                 bool ret = readScript(delUpRepSub_script, scriptStream);
 
@@ -317,7 +317,7 @@ namespace pigeon {
         MemMap * ptMap = (MemMap *)privdata;
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            printf("[%s] cacheUpRepSubCallbackExScript: reply null\n", (char*)privdata);
+            LOG(ERROR)<<"cacheUpRepSubCallbackExScript: reply null";
             if (NULL != ptMap) {
                 delete ptMap;
                 ptMap = NULL;
@@ -327,16 +327,15 @@ namespace pigeon {
 
         
         if (!ptMap) {
-            printf("happen exception cacheUpRepSubCallbackExScript privdata is null\n");
+            LOG(ERROR)<<"happen exception cacheUpRepSubCallbackExScript privdata is null";
             return;
         }
 
-        printf("[%s] cacheUpRepSubCallbackExScript: %lld\n", ptMap->mKey.c_str(), reply->integer);
+        LOG(TRACE)<<ptMap->mKey.c_str()<<" cacheUpRepSubCallbackExScript: "<<reply->integer;
 
         if (reply->type == REDIS_REPLY_ERROR) {
             if (NULL != strstr(reply->str, "NOSCRIPT No matching script")) {
                 //USE EVAL
-                printf("redis-server not cache, we need eval\n");
                 std::string scriptStream = "";
                 bool ret = readScript(cacheUpRepSub_script, scriptStream);
 
@@ -364,7 +363,6 @@ namespace pigeon {
         }
 
         GatewayProp *ptProp = (GatewayProp *)privdata;
-        printf("checkGWIDCallback: %lld\n", reply->integer);
         if (reply->integer == 1) {
 
             std::unique_ptr<GatewayPropSon> ptUqPropSon(new GatewayPropSon());
@@ -394,11 +392,11 @@ namespace pigeon {
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
 
-            printf("[%s]-cacheUpRouterInfo: reply null\n", (char *)privdata);
+            LOG(ERROR)<<" -cacheUpRouterInfo: reply null";
             return;
         }
 
-        printf("[%s]: %s\n", (char*)privdata, reply->str);
+        LOG(TRACE)<<(char *)privdata<<" ret:"<<reply->str;
         redisAsyncCommand(c, expireUpRCacheCallback, NULL, "expire  %s %d", (char *)privdata, 30);
     }
 
@@ -406,11 +404,11 @@ namespace pigeon {
 
         redisReply *reply = (redisReply *)r;
         if (reply == NULL) {
-            printf("[%s]: reply null\n", "expireUpRCacheCallback");
+            LOG(ERROR)<<"expireUpRCacheCallback reply is null";
             return;
         }
 
-        printf("[%s]: %lld\n", "expireUpRCacheCallback", reply->integer);
+
     }
 
     void GatewayDataMgr::getGatewayProp(const std::list<std::string> &gwidList, QFuncObject *ptFuncObj){
@@ -433,14 +431,12 @@ namespace pigeon {
             std::map<std::string,std::string>::iterator it;
             it = mScriptSha1Map.find(saveGatewayProp_script);
             if (it == mScriptSha1Map.end()) {
-                printf("not find %s sha1val\n", saveGatewayProp_script.c_str());
+                LOG(ERROR)<<"not find "<<saveGatewayProp_script<<" sha1val";
                 delete PtProp;
                 PtProp = NULL;
                 return;
             }
             
-            printf("sha1: [%s]\n", it->second.c_str());
-
             char gwPropKey[128];
             snprintf(gwPropKey, 127, "%s:%s:%s", ISCRule::iot_gw_dbtag.c_str(), PtProp->mGwId.c_str(), \
                     ISCRule::iot_gwprop_dbtag.c_str());
@@ -514,7 +510,7 @@ namespace pigeon {
         FILE *pp;
         if( (pp = popen(buf, "r")) == NULL )
         {
-            printf("popen() error for %s!/n", buf);
+            LOG(ERROR)<<"popen() error for "<<buf;
             return false;
         }
         while(fgets(buf, sizeof(buf), pp))
@@ -537,7 +533,7 @@ namespace pigeon {
             std::map<std::string,std::string>::iterator it;
             it = mScriptSha1Map.find(cacheUpRepSub_script);
             if (it == mScriptSha1Map.end()) {
-                printf("not find %s sha1val\n", cacheUpRepSub_script.c_str());
+                LOG(ERROR)<<"not find "<<cacheUpRepSub_script<<" sha1val";
                 delete ptMap;
                 ptMap = NULL;
                 return;
@@ -556,7 +552,7 @@ namespace pigeon {
             std::map<std::string,std::string>::iterator it;
             it = mScriptSha1Map.find(delUpRepSub_script);
             if (it == mScriptSha1Map.end()) {
-                printf("not find %s sha1val\n", delUpRepSub_script.c_str());
+                LOG(ERROR)<<"not find "<<delUpRepSub_script<<" sha1val";
                 delete ptMap;
                 ptMap = NULL;
                 return;

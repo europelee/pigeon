@@ -13,11 +13,14 @@
 #include <cstring>
 #include <thread>
 #include <chrono>
+#include "easylogging++.h"
 #include "MqttEnd.h"
 #include "MsgProcessEnd.h"
 #include "AgentFrontEnd.h"
 #include "DataCollectEnd.h"
 #include "DevPluginMng.h"
+
+INITIALIZE_EASYLOGGINGPP
 
 static std::atomic_flag g_stopflag = ATOMIC_FLAG_INIT;
 static const std::string plugDirPath = "./dev_plugins";
@@ -27,7 +30,7 @@ std::shared_ptr<pigeon::MqttEnd> end = nullptr;
 std::shared_ptr<DevPluginMng> plugMng = nullptr;
 
 static void sigIntHandler(int sig) {
-    std::cout<<"sig no "<<sig<<std::endl;
+    LOG(TRACE)<<"sig no "<<sig;
     g_stopflag.clear();
 }
 
@@ -37,6 +40,9 @@ int main (int argc, char ** argv) {
         return -1;
     }
 
+    el::Configurations confFromFile("./gwagent-logger.conf");
+    el::Loggers::reconfigureAllLoggers(confFromFile);
+    
     g_stopflag.test_and_set();    
     signal(SIGINT, sigIntHandler);
     signal(SIGTERM, sigIntHandler);

@@ -8,6 +8,7 @@
 #include <thread>
 #include <list>
 #include <functional>
+#include "easylogging++.h"
 #include "MsgProcessEnd.h"
 #include "ISCRule.h"
 #include "DataCollectInfo.h"
@@ -21,7 +22,7 @@ MsgProcessEnd::MsgProcessEnd(const std::string & gwid): mThreadInter(false), mUq
 
 
 MsgProcessEnd::~MsgProcessEnd() {
-    std::cout<<"MsgProcessEnd destructor"<<std::endl;
+    LOG(TRACE)<<"MsgProcessEnd destructor";
     int ret = fini_memqueue(1024*1024, &mCommCtlInfo, STREAM_IN_DIRECT); 
     assert(ret==0);
 }
@@ -69,7 +70,7 @@ void MsgProcessEnd::procThread() {
         int wRet = mBinSem.timeWait(1);
         if (wRet == -1) {
             if (errno != ETIMEDOUT)
-                std::cout<<"procThread:"<<strerror(errno)<<std::endl;
+                LOG(ERROR)<<"procThread:"<<strerror(errno);
         }
         else { 
             onProc();
@@ -95,7 +96,7 @@ void MsgProcessEnd::setPluginMng(std::shared_ptr<DevPluginMng> mng) {
 
 void MsgProcessEnd::onSuccess(const std::string & topic, const std::string & rep)  {
 
-    std::cout<<"onSuccess:"<<topic<<"  "<<rep<<std::endl;
+    LOG(DEBUG)<<"onSuccess:"<<topic<<"  "<<rep;
 
 
     /* put cliid&payload into queue*/
@@ -104,7 +105,7 @@ void MsgProcessEnd::onSuccess(const std::string & topic, const std::string & rep
     if (SHM_OPT_FAIL == ret)
     {
         releaseMqttMsgInfoObj(&ptRepO);
-        std::cout<<"shm_write fail"<<std::endl;
+        LOG(ERROR)<<"shm_write fail";
         return;
     }
     /* signal BackEndThread*/
@@ -123,7 +124,7 @@ void MsgProcessEnd::onProc() {
     int ret = shm_read(&mCommCtlInfo, (void *)&ptRepO, sizeof(void *), STREAM_IN_DIRECT);
     if (SHM_OPT_FAIL == ret)
     {
-        std::cout<<"shm_read fail"<<std::endl;
+        LOG(ERROR)<<"shm_read fail";
         return;
     }
 
@@ -134,15 +135,13 @@ void MsgProcessEnd::onProc() {
 
     const std::string & gwID = pigeon::ISCRule::getUPReqID(topic);
     if (gwID == pigeon::ISCRule::null_id) {
-        std::cout<<gwID<<" "<<pigeon::ISCRule::null_id<<std::endl;
-        std::cout<<"not get UPID"<<std::endl;
+        LOG(TRACE)<<gwID<<" "<<pigeon::ISCRule::null_id<<" not get upid";
         return;
     }
 
     const std::string & devCId = pigeon::ISCRule::getUPReqDevCSource(topic);
     if (devCId == pigeon::ISCRule::null_id) {
-        std::cout<<devCId<<" "<<pigeon::ISCRule::null_id<<std::endl;
-        std::cout<<"not get devCsource"<<std::endl;
+        LOG(TRACE)<<devCId<<" "<<pigeon::ISCRule::null_id<<" not get devSource";
         return;
     }
     //todo: parse rep msg then go processing:
@@ -158,14 +157,14 @@ void MsgProcessEnd::onProc() {
         tmp->onData(topic, rep);
     }
     else {
-        std::cout<<"mLi is null"<<std::endl;
+        LOG(ERROR)<<"mLi is null";
     }
 }
 
 void MsgProcessEnd::onTick() {
 
     //
-    std::cout<<"collecting ..."<<std::endl;
+    LOG(TRACE)<<"collecting ...";
     const std::list<DataCollectInfo *> & list = mUqDCEnd->startCollection();
 
     std::shared_ptr<MPEndListener> tmp = mLi.lock();
@@ -177,7 +176,7 @@ void MsgProcessEnd::onTick() {
         }
     }
     else {
-        std::cout<<"mLi is null"<<std::endl;
+        LOG(ERROR)<<"mLi is null";
     }
 }
 
@@ -192,11 +191,11 @@ void MsgProcessEnd::onCollect() {
         DevPluginInfo * tmp = iter->second;
         if (nowTime - tmp->getLabelTime() > tmp->getDevPlugin()->dev_datacollectTick) {
             //collect
-            std::cout<<iter->first<<" collect data ..."<<std::endl;
+            LOG(DEBUG)<<iter->first<<" collect data ...";
             char * ptrData = NULL;
             int len = 0;
             tmp->getDevPlugin()->collect_func(&ptrData,&len);
-            std::cout<<ptrData<<std::endl;
+            LOG(DEBUG)<<ptrData;
             if (false == mDataValidator.validJsonData(ptrData)) {
                 free(ptrData);
                 ptrData = NULL;
@@ -216,7 +215,7 @@ void MsgProcessEnd::onCollect() {
                 }
             }
             else {
-                std::cout<<"mLi is null"<<std::endl;
+                LOG(ERROR)<<"mLi is null";
             }
             nowTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
             tmp->setLabelTime(nowTime);

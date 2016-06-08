@@ -13,6 +13,7 @@
 #include <thread>
 #include <functional>
 #include <memory>
+#include "easylogging++.h"
 #include "GatewayPropSon.h"
 #include "ISCRule.h"
 #include "DataCollectInfo.h"
@@ -25,7 +26,7 @@ class DataCollectEnd {
         }
 
         ~DataCollectEnd() {
-            std::cout<<"DataCollectEnd destructor"<<std::endl;
+            LOG(TRACE)<<"DataCollectEnd destructor";
             clearDCList();
         }
         

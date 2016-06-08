@@ -8,6 +8,7 @@
 #include<string.h>
 #include<thread>
 #include<iostream>
+#include "easylogging++.h"
 #include <curl/curl.h>
 #include "httpclient.h"
 
@@ -162,7 +163,7 @@ namespace pigeon {
             li.get()->onHead(hInfo);        
         }
         else {
-            fprintf(stderr, "ptrCli or ptrCli->getSharedPtrofMsgListener is null\n");
+            LOG(ERROR)<<"ptrCli or ptrCli->getSharedPtrofMsgListener is null";
         }
         return size*nmemb; 
     }
@@ -174,7 +175,7 @@ namespace pigeon {
             li.get()->onData(buffer, size*nmemb);        
         }
         else {
-            fprintf(stderr, "ptrCli or ptrCli->getSharedPtrofMsgListener is null\n");
+            LOG(ERROR)<<"ptrCli or ptrCli->getSharedPtrofMsgListener is null";
         }
         return size*nmemb; 
     }
@@ -182,7 +183,7 @@ namespace pigeon {
     void HTTPClient::getHelper(const std::string &url, std::shared_ptr<HttpMsgListener> ptLi) {
 
         if (!ptLi) {
-            printf("HttpMsgListener is null\n");
+            LOG(ERROR)<<"HttpMsgListener is null";
             return;
         }
 
@@ -220,12 +221,12 @@ namespace pigeon {
 
             if(CURLE_OK != res) {
                 /* we failed */
-                fprintf(stderr, "curl told us %d\n", res);
+                LOG(ERROR)<<"curl told us :"<<res;
                 li.get()->onError(HttpReqErr::HTTP_CURL_EASY_PERFORM_FAIL, "curl_easy_perform fail");        
             }
         }
         else {
-            fprintf(stderr, "curl_easy_init return curl==null\n");
+            LOG(ERROR)<<"curl_easy_init return curl==null";
             li.get()->onError(HttpReqErr::HTTP_CURL_EASY_INIT_FAIL, "curl_easy_init return curl==null");        
         }
 
@@ -240,7 +241,7 @@ namespace pigeon {
     void HTTPClient::postHelper(const std::string &url, const std::string &reqBody, std::shared_ptr<HttpMsgListener> ptLi) {
 
         if (!ptLi) {
-            printf("HttpMsgListener is null\n");
+            LOG(ERROR)<<"HttpMsgListener is null";
             return;
         }
 
@@ -278,15 +279,14 @@ namespace pigeon {
             /* Check for errors */
             if(res != CURLE_OK) {
 
-                fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                        curl_easy_strerror(res));
+                LOG(ERROR)<<"curl_easy_perform() failed: "<<curl_easy_strerror(res);
                 li.get()->onError(HttpReqErr::HTTP_CURL_EASY_PERFORM_FAIL, "curl_easy_perform fail");        
             }
             /* always cleanup */
             curl_easy_cleanup(curl);
         }
         else {
-            fprintf(stderr, "curl_easy_init return curl==null\n");
+            LOG(ERROR)<<"curl_easy_init return curl==null";
             li.get()->onError(HttpReqErr::HTTP_CURL_EASY_INIT_FAIL, "curl_easy_init return curl==null");        
         }
 
