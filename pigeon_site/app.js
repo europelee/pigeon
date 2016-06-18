@@ -9,6 +9,9 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+var consts = require('./consts'); 
+var vod = require('./routes/vod');
+var live = require('./routes/live');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -24,6 +27,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
+app.use(consts.VOD_PATH, vod);
+//app.use(consts.LIVE_PATH, live);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
