@@ -6,6 +6,7 @@ var devstore = require('../../nodejs_lib/model/devstore');
 var consts = require('../consts');
 var redis_dbconf = require('../../nodejs_lib/dbconf/redis_dbconf');
 var util   = require('../../nodejs_lib/lib/util');
+var uuid = require('node-uuid');
 
 //invoked by any requests passed to the gateway router
 router.use(function devLog(req, res, next) {
@@ -31,7 +32,7 @@ router.post('/', function(req, res) {
         if (err == null && ret == 1) {
             //generate devid
             var timestamp = Date.now();
-            var devid = util.createmd5(req.body.macaddr+timestamp+util.randomMix(8));
+            var devid = uuid.v1();
             devstore.saveGWDevId(redis_dbconf, consts.GW_SET_KEY, devid, consts.GW_MAC_KEY, req.body.macaddr, function(err, sret) {
                 if (err == null) {
                     var rspInfo = new Object();
