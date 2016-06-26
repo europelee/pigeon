@@ -41,17 +41,6 @@ router.get('/profile', function(req, res) {
 
 router.get('/devices', logstat.onLine);
 router.get('/devices', function(req, res) {
-    //test
-//    setInterval(function () {
-
-        console.log("check gw prop....:");
-        var gwO = new Object();
-        gwO.gwid = 'j4hJbk3YRHgzi1eimCKuvQ=='; 
-        var subMsg = {action:'getAgentProp', param:gwO};
-        gBackEnd.sendMsg("dev_controller", subMsg, function(err, msg){
-            console.log('test agentprop:'+JSON.stringify(msg));
-        });
-//    },9000);
     
     var cmdO = new Object();
     cmdO.gwid = 'j4hJbk3YRHgzi1eimCKuvQ==';

@@ -1,3 +1,46 @@
+<script>
+window.onload=function(){
+    var url='http://userportal.athenacloud.net/';
+    var socket = io.connect(url);
+    var taskId;
+
+    function getGateWayStatus() {
+
+<% if (typeof(gwlist) != 'undefined' && gwlist != null) { %>
+
+    <% for (var ind=0; ind<gwlist.length; ind=ind+1) { %>
+        socket.emit('agentPropReq', '<%= gwlist[ind]['ID'] %>'); 
+    <% } %>
+<% } %>
+    }
+
+    socket.on('connect', function(){ 
+        console.log('connected to server succ'); 
+        socket.send('Hi Server!'); 
+        taskId = window.setInterval(getGateWayStatus, 20000);
+    }) ;
+
+    socket.on('message', function(r){ console.log('msg:'+r); }) ;
+    socket.on('disconnect', function(){ console.log('disconnected from server'); window.clearInterval(taskId);}) ;
+
+    socket.on('agentPropRsp', function (data) {
+        console.log(data);
+        var ret = JSON.parse(data);
+        var list =  document.getElementById(ret.gwid).getElementsByTagName("tr");
+        for (var i=0; i < list.length; ++i) {
+            if ("status:" == list.item(i).getElementsByTagName("th")[0].innerHTML) {
+                var olVal = ret.prop.online;
+                if (olVal == 1) {
+                    list.item(i).getElementsByTagName("td")[0].innerHTML = "online";
+                }
+                else {
+                    list.item(i).getElementsByTagName("td")[0].innerHTML = "offline";
+                }
+            }
+        }
+    });
+}
+</script>
 <div class="row">
 <div class="panel panel-info col-md-5 col-md-offset-3">
   <div class="panel-heading" style="width:100%;">
@@ -22,6 +65,7 @@
  </div>
 </div>  
 </div>
+<div id="gateways">
 <% if (typeof(gwlist) != 'undefined' && gwlist != null) { %>
 
     <% for (var ind=0; ind<gwlist.length; ind=ind+2) { %>
@@ -33,6 +77,17 @@
         </div>
         <div class="panel-body">
            <%= gwlist[ind]['ID'] %>
+
+           <table class="table table-striped" id='<%= gwlist[ind]['ID'] %>'>
+           <thead>
+           </thead>
+           <tbody>
+           <tr>
+           <th scope="row">status:</th>
+           <td> <%= gwlist[ind]['online'] %> </td>
+           </tr>
+           </tbody>
+           </table> 
         </div>
         </div>
        <% if (ind+1 < gwlist.length) { %>  
@@ -40,12 +95,22 @@
                     <div class="panel-heading">
                     <h3 class="panel-title">gateway</h3>
                     </div>
-                    <div class="panel-body">
+                    <div class="panel-body" >
                     <%= gwlist[ind+1]['ID'] %>
+                      <table class="table table-striped" id='<%= gwlist[ind+1]['ID'] %>'>
+                      <thead>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th scope="row">status:</th>
+                          <td> <%= gwlist[ind+1]['online'] %> </td>
+                        </tr>
+                      </tbody>
+                    </table> 
                     </div>
             </div>
         <% } %>  
 </div>    
     <% } %>
 <% } %>
-
+</div>

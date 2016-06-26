@@ -9,6 +9,8 @@ if bExist == 1 then
     local onLine = gwProp['online']
     local gwInstPropKey = KEYS[2] 
     local ret = redis.call('hmset', gwInstPropKey, 'online', onLine) 
+    --treat gwInstPropKey as a live&tmp.
+    redis.call('expire', gwInstPropKey, 60)
     return ret 
 end
 

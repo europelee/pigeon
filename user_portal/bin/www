@@ -11,6 +11,7 @@ var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
 var Observer = require('../clusterObeserver');
 var UPBackEnd = require('../UPBackEnd');
+var io = require('socket.io');
 
 if (cluster.isMaster) {
 
@@ -40,6 +41,47 @@ else if (cluster.isWorker) {
         server.listen(port);
         server.on('error', onError);
         server.on('listening', onListening);
+
+        //websocket svr
+        global.devMntCliList = new Map();
+        var socket = io.listen(server);
+        socket.on('connection', function(client){ 
+
+                console.log("New client is here!");
+
+                if (global.devMntCliList.has(client.id) == false) {
+                    console.log("monitor:"+client.id);
+                    global.devMntCliList.set(client.id, client);
+                }
+
+                client.on('message', function(msg) { 
+                    console.log("client has sent:"+msg); 
+
+                    });
+
+                client.on('disconnect', function(){ 
+                    console.log("Client has disconnected");
+                    if (global.devMntCliList.has(client.id) == true) {
+                        console.log("unmonitor:"+client.id);
+                        global.devMntCliList.delete(client.id);
+                    }
+
+                    }) ;
+
+                client.on('agentPropReq', function (data) {
+                    console.log('gwid:'+data);
+                
+                    var gwO = new Object();
+                    gwO.gwid = data; 
+                    var subMsg = {action:'getAgentProp', param:gwO};
+                    gBackEnd.sendMsg("dev_controller", subMsg, function(err, msg){
+                        console.log('test agentprop:'+JSON.stringify(msg));
+                        if (msg.action == 'getAgentProp') {
+                            client.emit('agentPropRsp', JSON.stringify(msg.ret));
+                        }
+                        });
+                    });
+                });          
         
         gBackEnd = new UPBackEnd(process.pid, 'dealer', '10.172.237.98:2182,10.172.237.98:2183,10.172.237.98:2184', '/pigeon/devctlsvc');
         gBackEnd.start(); 

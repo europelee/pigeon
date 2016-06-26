@@ -48,7 +48,8 @@ void DevQueryEnd::procQuery(const std::string &cliID, int seq, const std::string
     rapidjson::Value& gwIdV = d[pigeon::ISCRule::msg_param_field.c_str()][pigeon::ISCRule::msg_gwid_field.c_str()];
     LOG(INFO)<<"action:"<<actionV.GetString()<<" param gwid"<<gwIdV.GetString();
     if (actionV.GetString() == AGENTPROP_ACTION) {
-        QFuncObject * ptQf = new QFuncObject(std::bind(&DevQueryEnd::queryCallback, this, cliID, seq, gwIdV.GetString(), std::placeholders::_1));
+        std::string gwidCp = gwIdV.GetString();
+        QFuncObject * ptQf = new QFuncObject(std::bind(&DevQueryEnd::queryCallback, this, cliID, seq, gwidCp, std::placeholders::_1));
         mPtrGwDMgr->getGatewayProp(gwIdV.GetString(), ptQf);
     }
 }
