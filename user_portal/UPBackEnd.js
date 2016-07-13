@@ -22,9 +22,15 @@ function UPBackEnd(upId, commType, zkAddrList, nodePath) {
     this.commAddr = null;
     this.seq = 0;
     this.svcDis = new SvcDis(zkAddrList, nodePath);
+    this.connStatus = -1;
 }
 
 module.exports = UPBackEnd;
+
+UPBackEnd.prototype.isConn = function isConn() {
+    var self = this;
+    return self.connStatus;
+}
 
 UPBackEnd.prototype.start = function start() {
    var self = this;
@@ -43,16 +49,49 @@ UPBackEnd.prototype.start = function start() {
 UPBackEnd.prototype.startHelper = function startHelper(commAddr) {
     
     var self = this;
-    self.socket.on('connect', function(fd, ep) {console.log('connect, endpoint:', ep);});
-    self.socket.on('connect_delay', function(fd, ep) {console.log('connect_delay, endpoint:', ep);});
-    self.socket.on('connect_retry', function(fd, ep) {console.log('connect_retry, endpoint:', ep);});
-    self.socket.on('listen', function(fd, ep) {console.log('listen, endpoint:', ep);});
-    self.socket.on('bind_error', function(fd, ep) {console.log('bind_error, endpoint:', ep);});
-    self.socket.on('accept', function(fd, ep) {console.log('accept, endpoint:', ep);});
-    self.socket.on('accept_error', function(fd, ep) {console.log('accept_error, endpoint:', ep);});
-    self.socket.on('close', function(fd, ep) {console.log('close, endpoint:', ep);});
-    self.socket.on('close_error', function(fd, ep) {console.log('close_error, endpoint:', ep);});
-    self.socket.on('disconnect', function(fd, ep) {console.log('disconnect, endpoint:', ep);});
+    self.connStatus = 1; //tmp way for zeromq.node problem.
+    self.socket.on('connect', function(fd, ep) {
+        console.log('connect, endpoint:', ep); 
+        self.connStatus = 1;
+    });
+    
+    self.socket.on('connect_delay', function(fd, ep) {
+        console.log('connect_delay, endpoint:', ep);
+    });
+    
+    self.socket.on('connect_retry', function(fd, ep) {
+        console.log('connect_retry, endpoint:', ep);
+    });
+    
+    self.socket.on('listen', function(fd, ep) {
+        console.log('listen, endpoint:', ep);
+    });
+    
+    self.socket.on('bind_error', function(fd, ep) {
+        console.log('bind_error, endpoint:', ep);
+    });
+    
+    self.socket.on('accept', function(fd, ep) {
+        console.log('accept, endpoint:', ep);
+    });
+    
+    self.socket.on('accept_error', function(fd, ep) {
+        console.log('accept_error, endpoint:', ep);
+    });
+    
+    self.socket.on('close', function(fd, ep) {
+        console.log('close, endpoint:', ep);
+        self.connStatus = 0;
+    });
+    
+    self.socket.on('close_error', function(fd, ep) {
+        console.log('close_error, endpoint:', ep);
+    });
+    
+    self.socket.on('disconnect', function(fd, ep) {
+        console.log('disconnect, endpoint:', ep);
+        self.connStatus = 0;
+    });
 
     self.socket.on('monitor_error', function(err) {
             console.log('Error in monitoring: %s, will restart monitoring in 5 seconds', err);
@@ -87,6 +126,11 @@ UPBackEnd.prototype.startHelper = function startHelper(commAddr) {
 UPBackEnd.prototype.sendMsg = function sendMsg(dest, msg, callback) {
     var self = this;
     
+    if (self.connStatus == 0) {
+        console.log("error: can not connect with dev_controller");
+        callback(-1, null);
+        return;
+    }
     console.log(LOG_TAG+' '+self.upId+' sendmsg '+msg);
     if (MAX_QUEUE_SIZE <= self.commandQueue.size) {
         console.log('commandQueue is full!');

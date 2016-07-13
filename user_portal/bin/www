@@ -71,9 +71,17 @@ else if (cluster.isWorker) {
                 client.on('agentPropReq', function (data) {
                     console.log('gwid:'+data);
                 
+                    if (gBackEnd.isConn() == 0) {
+                        console.log("UPBackEnd has be diconnected with BackEnd");
+                        var errRet = {gwid:data, error:1};
+                        client.emit('agentPropRsp', JSON.stringify(errRet));
+                        return;
+                    }
+                    
                     var gwO = new Object();
                     gwO.gwid = data; 
                     var subMsg = {action:'getAgentProp', param:gwO};
+
                     gBackEnd.sendMsg("dev_controller", subMsg, function(err, msg){
                         console.log('test agentprop:'+JSON.stringify(msg));
                         if (msg.action == 'getAgentProp') {

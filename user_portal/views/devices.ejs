@@ -21,7 +21,17 @@ window.onload=function(){
     }) ;
 
     socket.on('message', function(r){ console.log('msg:'+r); }) ;
-    socket.on('disconnect', function(){ console.log('disconnected from server'); window.clearInterval(taskId);}) ;
+    socket.on('disconnect', function() { 
+        console.log('disconnected from server'); 
+        window.clearInterval(taskId);
+        
+        var list =  document.getElementById(ret.gwid).getElementsByTagName("tr");
+        for (var i=0; i < list.length; ++i) {
+            if ("status:" == list.item(i).getElementsByTagName("th")[0].innerHTML) {
+                    list.item(i).getElementsByTagName("td")[0].innerHTML = "unknow";
+                }
+            }
+        }) ;
 
     socket.on('agentPropRsp', function (data) {
         console.log(data);
@@ -29,12 +39,26 @@ window.onload=function(){
         var list =  document.getElementById(ret.gwid).getElementsByTagName("tr");
         for (var i=0; i < list.length; ++i) {
             if ("status:" == list.item(i).getElementsByTagName("th")[0].innerHTML) {
-                var olVal = ret.prop.online;
+                var berr = 0;
+                var olval = 0;
+                if (ret.error == 1) {
+                    berr = 1;
+                }
+                else {
+                    berr = 0;
+                    olVal = ret.prop.online;
+                }
+                
+                if (berr == 1) {
+                    list.item(i).getElementsByTagName("td")[0].innerHTML = "unknow";
+                }
+                else {
                 if (olVal == 1) {
                     list.item(i).getElementsByTagName("td")[0].innerHTML = "online";
                 }
                 else {
                     list.item(i).getElementsByTagName("td")[0].innerHTML = "offline";
+                }
                 }
             }
         }
